@@ -616,7 +616,7 @@ function setBar(k,v){
 }
 let curFrames=[], curIdx=0, curTimer=null, curSeedStr="", counter=0, curAct="walk", lastDexSeed=null;
 const ACT_MS={walk:320,run:150,jump:115,rest:430};
-let pvXray=false;
+let pvXray=false, curFam="bipedal";
 const dexGrid = document.getElementById("dexGrid");
 function addDexEntry(name, frameCanvas){
   if(dexGrid.querySelector(".hint")) dexGrid.innerHTML="";
@@ -633,6 +633,7 @@ function generate(text){
   const seed=fnv1a(seedStr), rnd=mulberry32(seed);
   const F=FAMILIES[seed%FAMILIES.length];
   P=makePalette(mulberry32(seed^0x9E3779B9));
+  curFam=F.key;
   const name=makeName(mulberry32(seed^0x85EBCA6B));
   const lore=makeLore(mulberry32(seed^0xC2B2AE35));
   const baseN=2+(seed>>3)%3;
@@ -677,23 +678,105 @@ document.getElementById("saveBtn").onclick=()=>{
   a.download="species_"+(curSeedStr||"none").replace(/\W+/g,"_").slice(0,20)+".png";
   a.href=view.toDataURL("image/png"); a.click();
 };
-/* —— 01 預覽：動作切換 + X-Ray（程序化生物冇 rig 圖，用 canvas 即場畫骨骼 overlay）—— */
+/* —— 01 預覽：動作切換 + X-Ray（按八族畫對應骨架，跟住動作郁）—— */
 function drawXray(){
-  const sw=(curAct==="rest")?0:(curAct==="run"?3:2)*(curIdx%2?-1:1), jump=curAct==="jump";
-  const hipY=jump?27:30, shY=jump?19:21, headY=jump?13:14, legY=jump?37:43;
+  const N=curFrames.length||1, f=curIdx%N, t=f/N, ph=f%2;
+  let bob=0;
+  if(curAct==="walk") bob=f<N/2?-1:0;
+  else if(curAct==="run") bob=-Math.round(Math.abs(Math.sin(t*Math.PI*2))*3);
+  else if(curAct==="jump") bob=-Math.round(Math.sin(Math.PI*t)*7);
+  else bob=(f%4<1)?-1:0;
+  const RUN=curAct==="run", REST=curAct==="rest", AIR=curAct==="jump"&&bob<=-3;
+  const sw=REST?0:(RUN?3:2)*(ph?-1:1);
   vctx.save();
   vctx.globalAlpha=.5; vctx.fillStyle="#0B1120"; vctx.fillRect(0,0,48,48);
-  vctx.globalAlpha=1; vctx.strokeStyle="#FB923C"; vctx.lineWidth=1;
-  vctx.beginPath();
-  vctx.moveTo(24,headY); vctx.lineTo(24,hipY);
-  vctx.moveTo(24,shY); vctx.lineTo(16,shY+6+sw*.5);
-  vctx.moveTo(24,shY); vctx.lineTo(32,shY+6-sw*.5);
-  vctx.moveTo(24,hipY); vctx.lineTo(19+sw,legY);
-  vctx.moveTo(24,hipY); vctx.lineTo(29-sw,legY);
-  vctx.stroke();
-  vctx.beginPath(); vctx.arc(24,headY-3,3,0,7); vctx.stroke();
-  vctx.fillStyle="#22C55E";
-  [[24,shY],[24,hipY],[19+sw,legY],[29-sw,legY],[16,shY+6],[32,shY+6]].forEach(pt=>vctx.fillRect(pt[0]-1,pt[1]-1,2,2));
+  vctx.globalAlpha=1;
+  const bone=(a,b,c,d)=>{vctx.beginPath();vctx.moveTo(a,b);vctx.lineTo(c,d);vctx.stroke();};
+  const jnt=(x,y)=>{vctx.fillStyle="#22C55E";vctx.fillRect(x-1,y-1,2,2);};
+  const skul=(x,y)=>{vctx.beginPath();vctx.arc(x,y,2.5,0,7);vctx.stroke();jnt(x,y);};
+  vctx.strokeStyle="#FB923C";
+  switch(curFam){
+    case "bipedal":{
+      const bh=ph?12:14, by=44-bh-8+bob, hy=by-9;
+      skul(24,hy+4);
+      bone(24,hy+8,24,by+bh);
+      const al=AIR?5:8, ay=by+4+(AIR?-3:0);
+      if(RUN){ bone(24,ay-2,15.5,ay+(ph?0:4)); bone(24,ay-2,29.5,ay+(ph?4:0)); }
+      else { bone(24,ay-2,15.5,ay+al-1); bone(24,ay-2,29.5,ay+al-1); }
+      const l1=(RUN&&ph)?1:0, l2=(RUN&&!ph)?1:0, ll=AIR?4:6;
+      bone(24,by+bh,16.5,44-l1-ll+ll-ll*.5-l1); bone(24,by+bh,29.5,44-l2-ll*.5);
+      break;
+    }
+    case "quadruped":{
+      const bh=ph?9:10, by=44-bh-8+bob, sy=by+bh/2;
+      bone(12,sy,36,sy);
+      skul(10.5,by-.5); skul(37.5,by-.5);
+      bone(12,sy,10.5,by+.5); bone(36,sy,37.5,by+.5);
+      const q1=(RUN&&ph)?1:0, q2=(RUN&&!ph)?1:0, lq=AIR?4:6;
+      [[12.5,q1],[20.5,q2],[27.5,q2],[35.5,q1]].forEach(l=>bone(l[0],sy,l[0],44-q1*0-lq-l[1]+lq));
+      break;
+    }
+    case "serpentine":{
+      const amp=REST?1:RUN?3:2, stp=REST?8:RUN?4:6;
+      let px=null,py=null;
+      for(let i=0;i<6;i++){
+        const wob=Math.round(Math.sin(i+f)*amp);
+        const cx=Math.min(21+wob,26)+1.5, cy=Math.round(8+i*stp)+(i%2===f%2?-1:0)+bob+(stp-1)/2;
+        if(px!==null) bone(px,py,cx,cy);
+        jnt(cx,cy); px=cx; py=cy;
+      }
+      skul(24,4+bob+(AIR?-2:0)+3.5);
+      break;
+    }
+    case "avian":{
+      const fly=AIR||RUN, by=44-16+bob*2-(fly?2:0);
+      skul(18.5,by-3.5); skul(29.5,by-3.5);
+      bone(24,by+1,24,by+8);
+      const wy=by+(fly?(ph?-6:-1):(ph?-3:1));
+      bone(20,wy+2,10,wy+2); bone(28,wy+2,38,wy+2);
+      jnt(10,wy+2); jnt(38,wy+2);
+      if(!fly){ bone(21.5,by+7,21.5,44); bone(26.5,by+7,26.5,44); }
+      break;
+    }
+    case "aquatic":{
+      const by=44-18+bob*2-(AIR?3:0);
+      skul(19,by+4); skul(29,by+4);
+      bone(24,by+1,24,by+10);
+      const ty=by+((f%(REST?4:2))?(REST?0:1):-1);
+      bone(24,by+5,11.5,ty+3.5); bone(24,by+5,36.5,ty+3.5);
+      jnt(11.5,ty+3.5); jnt(36.5,ty+3.5);
+      break;
+    }
+    case "insectoid":{
+      const by=44-20+bob, ly=by+15;
+      bone(24,by,24,by+15);
+      skul(24,by+3);
+      bone(21.5,by,21.5,by-4); bone(26.5,by,26.5,by-4);
+      for(let i=0;i<3;i++){
+        const tipy=ly-i*2+1+(RUN&&i===1?sw:0);
+        bone(22,by+8+i*2,17+i*2,tipy); bone(26,by+8+i*2,31-i*2,tipy);
+        jnt(17+i*2,tipy); jnt(31-i*2,tipy);
+      }
+      break;
+    }
+    case "amorphous":{
+      const r=(ph?10:9)-(curAct==="jump"?1:0);
+      const cy=44-r+bob-1;
+      vctx.beginPath(); vctx.arc(24,cy,3+(ph?1:0),0,7); vctx.stroke();
+      jnt(24,cy);
+      break;
+    }
+    case "floating":{
+      const by=10+bob*2+(curAct==="run"?-2:0);
+      skul(19.5,by+4); skul(28.5,by+4);
+      bone(24,by+2,24,by+10);
+      for(let i=0;i<4;i++){
+        const tl=6+((i+f)%(REST?4:2)?2:0)+(curAct==="jump"?2:0);
+        bone(17+i*4,by+12,17+i*4,by+12+tl);
+      }
+      break;
+    }
+  }
   vctx.restore();
 }
 document.querySelectorAll(".pvctl [data-act]").forEach(b=>{
