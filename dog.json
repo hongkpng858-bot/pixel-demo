@@ -1,0 +1,29 @@
+{
+  "name": "dog_walk",
+  "rig": {
+    "bones": [
+      "spine",
+      "neck",
+      "head",
+      "tail",
+      "leg_front.L/R (upper+lower)",
+      "leg_back.L/R (upper+lower)"
+    ],
+    "method": "forward-kinematics, trot gait (diagonal pairs)"
+  },
+  "frameSize": [
+    48,
+    48
+  ],
+  "frameCount": 16,
+  "fps": 12.5,
+  "loop": true,
+  "files": {
+    "previewGif": "dog.gif",
+    "rigPreviewGif": "dog_rig.gif",
+    "spriteSheetLogical": "dog_sheet.png",
+    "spriteSheetScaled": "dog_sheet@8x.png",
+    "rigSheetScaled": "dog_rig@8x.png",
+    "scale": 8
+  }
+}

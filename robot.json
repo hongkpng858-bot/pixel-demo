@@ -1,0 +1,31 @@
+{
+  "name": "robot_walk",
+  "rig": {
+    "bones": [
+      "pelvis",
+      "thigh.L/R",
+      "shin.L/R",
+      "spine",
+      "upperarm.L/R",
+      "forearm.L/R",
+      "head",
+      "antenna"
+    ],
+    "method": "forward-kinematics from joint angles"
+  },
+  "frameSize": [
+    48,
+    48
+  ],
+  "frameCount": 16,
+  "fps": 12.5,
+  "loop": true,
+  "files": {
+    "previewGif": "robot.gif",
+    "rigPreviewGif": "robot_rig.gif",
+    "spriteSheetLogical": "robot_sheet.png",
+    "spriteSheetScaled": "robot_sheet@8x.png",
+    "rigSheetScaled": "robot_rig@8x.png",
+    "scale": 8
+  }
+}

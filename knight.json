@@ -1,0 +1,31 @@
+{
+  "name": "knight_walk",
+  "rig": {
+    "bones": [
+      "pelvis",
+      "thigh.L/R",
+      "shin.L/R",
+      "spine",
+      "upperarm.L/R",
+      "forearm.L/R",
+      "head",
+      "sword"
+    ],
+    "method": "forward-kinematics, same skeleton as walker"
+  },
+  "frameSize": [
+    48,
+    48
+  ],
+  "frameCount": 16,
+  "fps": 12.5,
+  "loop": true,
+  "files": {
+    "previewGif": "knight.gif",
+    "rigPreviewGif": "knight_rig.gif",
+    "spriteSheetLogical": "knight_sheet.png",
+    "spriteSheetScaled": "knight_sheet@8x.png",
+    "rigSheetScaled": "knight_rig@8x.png",
+    "scale": 8
+  }
+}
