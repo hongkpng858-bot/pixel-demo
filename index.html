@@ -166,6 +166,57 @@
   .dropzone input[type=file] { display:none; }
   #animView { width:min(240px,70vw);height:auto;aspect-ratio:1/1;image-rendering:pixelated;display:block;
     background:repeating-conic-gradient(#10192B 0% 25%,#16223A 0% 50%) 0 0/24px 24px; }
+  /* ===== SHOWREEL：八大物種輪播（v8 搬返嚟）===== */
+  .reel-wrap { position:relative; max-width:920px; margin:0 auto; }
+  .reel { position:relative; background:#0D1526; border:2px solid var(--border);
+    box-shadow:0 0 0 2px #000, 8px 8px 0 rgba(0,0,0,.55); overflow:hidden; }
+  .reel::before { content:""; position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px); }
+  .reel-stage { display:flex; align-items:center; justify-content:center;
+    height:min(46vw,380px); min-height:240px;
+    background:
+      radial-gradient(ellipse 70% 60% at 50% 62%, rgba(37,99,235,.14), transparent 60%),
+      repeating-conic-gradient(#0F1830 0% 25%, #121C36 0% 50%) 0 0/26px 26px; }
+  .reel-sprite { --z:5; --logical:48; --frames:16;
+    --fw:calc(var(--logical) * var(--z) * 1px);
+    width:var(--fw); aspect-ratio:1/1; image-rendering:pixelated;
+    background-repeat:no-repeat;
+    background-size:calc(var(--frames) * var(--fw)) 100%;
+    animation:play var(--dur,1.28s) steps(var(--frames)) infinite;
+    transition:opacity .28s steps(4); }
+  .reel-sprite.fade { opacity:0; }
+  @keyframes play { from{background-position-x:0} to{background-position-x:calc(-1*var(--frames)*var(--fw))} }
+  .reel-tag { position:absolute; left:14px; top:12px; display:flex; flex-direction:column; gap:6px; text-align:left; }
+  .reel-tag .fam { font-family:var(--fd); font-size:10px; color:var(--on-accent);
+    background:var(--accent); padding:6px 10px; box-shadow:3px 3px 0 #000; }
+  .reel-tag .nm { font-family:var(--fd); font-size:8px; color:var(--gold); text-shadow:2px 2px 0 #000; }
+  .reel-tag .ds { font-size:17px; color:var(--muted); max-width:300px; text-shadow:1px 1px 0 #000;
+    font-family:'Microsoft JhengHei','PingFang TC',sans-serif; }
+  .reel-ctl { position:absolute; left:14px; bottom:12px; display:flex; gap:8px; z-index:5; }
+  .dots { position:absolute; right:14px; bottom:12px; display:flex; gap:7px; }
+  .dots i { width:10px; height:10px; background:#22304F; border:1px solid #000; cursor:pointer; }
+  .dots i.on { background:var(--accent); }
+  .reel-frame { position:absolute; width:22px; height:22px; border:3px solid var(--border); pointer-events:none; }
+  .rf-tl{top:8px;left:8px;border-right:none;border-bottom:none}
+  .rf-tr{top:8px;right:8px;border-left:none;border-bottom:none}
+  .rf-bl{bottom:8px;left:8px;border-right:none;border-top:none}
+  .rf-br{bottom:8px;right:8px;border-left:none;border-top:none}
+  .sp-slime   {--logical:32;background-image:url("slime_sheet@8x.png")}
+  .sp-walker  {background-image:url("walker_sheet@8x.png")}
+  .sp-dog     {background-image:url("dog_sheet@8x.png")}
+  .sp-bird    {background-image:url("bird_sheet@8x.png")}
+  .sp-fish    {background-image:url("fish_sheet@8x.png")}
+  .sp-bug     {background-image:url("bug_sheet@8x.png")}
+  .sp-serpent {background-image:url("serpent_sheet@8x.png")}
+  .sp-ghost   {background-image:url("ghost_sheet@8x.png")}
+  .xr-walker{background-image:url("walker_rig@8x.png")}
+  .xr-dog{background-image:url("dog_rig@8x.png")}
+  .xr-bird{background-image:url("bird_rig@8x.png")}
+  .xr-fish{background-image:url("fish_rig@8x.png")}
+  .xr-bug{background-image:url("bug_rig@8x.png")}
+  .xr-serpent{background-image:url("serpent_rig@8x.png")}
+  .xr-ghost{background-image:url("ghost_rig@8x.png")}
+
   /* ===== 04 LIBRARY ===== */
   .libtabs { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px; }
   .libgrid { display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); }
@@ -226,6 +277,7 @@
   <div class="wrap navin">
     <a class="logo" href="#top"><i></i>PIXEL SPECIES LAB</a>
     <div class="navlinks">
+      <a href="#species">SPECIES</a>
       <a href="#creator">CREATOR</a>
       <a href="#styles">STYLES</a>
       <a href="#tex">TEXTURES</a>
@@ -250,6 +302,30 @@
     <span><b>∞</b> 物種組合</span><span><b>6</b> 種動作</span><span><b>4</b> 套風格</span><span><b>$0</b> 月費</span><span><b>0</b> 排隊時間</span>
   </div>
 </header>
+
+<!-- ===== SPECIES SHOWREEL：八大物種輪播 ===== -->
+<section id="species" class="blk wrap">
+  <span class="blk-label">SPECIES SHOWREEL</span>
+  <h2>八大身體藍圖，每種都有真骨骼</h2>
+  <p class="desc">由黏體到浮遊靈體 — 每個物種族都有一條手工整嘅動畫 sheet 同專屬骨架。撳 X-RAY 睇穿佢，或者撳下面圓點直接揀。</p>
+  <div class="reel-wrap">
+    <div class="reel" id="reel" aria-label="八大身體藍圖物種輪播">
+      <span class="reel-frame rf-tl"></span><span class="reel-frame rf-tr"></span>
+      <span class="reel-frame rf-bl"></span><span class="reel-frame rf-br"></span>
+      <div class="reel-stage"><div class="reel-sprite sp-slime" id="reelSprite"></div></div>
+      <div class="reel-tag">
+        <span class="fam" id="reelFam">黏體族 · AMORPHOUS</span>
+        <span class="nm" id="reelNm">SLIME HOP</span>
+        <span class="ds" id="reelDs">最經典嘅入門生物 — 一壓一彈，永遠唔會死。</span>
+      </div>
+      <div class="reel-ctl">
+        <button class="rbtn" id="xrayBtn" aria-label="切換骨骼 X-Ray 檢視">X-RAY 🦴</button>
+        <button class="rbtn" id="pauseBtn" aria-label="暫停或繼續輪播動畫">⏸ PAUSE</button>
+      </div>
+      <div class="dots" id="reelDots"></div>
+    </div>
+  </div>
+</section>
 
 <!-- ===== 01 CHARACTER CREATOR ===== -->
 <section id="creator" class="blk wrap">
@@ -996,6 +1072,70 @@ document.getElementById("animFrameBtn").onclick=()=>{
   if(!animFrames.length)return;
   dlCanvas(upScale(document.getElementById("animView"),8),(animName||"anim")+"_"+animIdx+".png");
 };
+
+/* ============ SHOWREEL：八大物種輪播（v8 搬返嚟）============ */
+const REEL = [
+  {css:"sp-slime",   rig:false, fam:"黏體族 · AMORPHOUS", nm:"SLIME HOP",       ds:"最經典嘅入門生物 — 一壓一彈，永遠唔會死。", dur:1.28},
+  {css:"sp-walker",  rig:true,  fam:"人形族 · BIPEDAL",   nm:"SKELETON WALKER", ds:"最基本嘅直立骨架 — 行路嗰陣膝頭會屈。", dur:1.28},
+  {css:"sp-dog",     rig:true,  fam:"獸形族 · QUADRUPED", nm:"DOG TROT",        ds:"四條腿對角交替 — 同真狗嘅 trot 步態一樣。", dur:1.28},
+  {css:"sp-bird",    rig:true,  fam:"鳥形族 · AVIAN",     nm:"BIRD FLAP",       ds:"翼骨拍動兩點固定 — 輕巧到可以掛喺任何場景。", dur:0.96},
+  {css:"sp-fish",    rig:true,  fam:"水棲族 · AQUATIC",   nm:"FISH SWIM",       ds:"全身脊椎波 — 尾鰭擺幅最大，推力就喺度。", dur:1.12},
+  {css:"sp-bug",     rig:true,  fam:"蟲形族 · INSECTOID", nm:"BUG WALK",        ds:"六腳三節 — 永遠有三隻腳掂地，穩陣行法。", dur:1.28},
+  {css:"sp-serpent", rig:true,  fam:"蛇形族 · SERPENTINE",nm:"SERPENT SLITHER", ds:"六節椎骨波浪推進 — 冇腳都走得快。", dur:1.44},
+  {css:"sp-ghost",   rig:true,  fam:"浮遊族 · FLOATING",  nm:"GHOST FLOAT",     ds:"下垂尾浪加無重力飄浮 — 呢個先係靈體。", dur:1.6}
+];
+const reelSprite = document.getElementById("reelSprite");
+const dotsBox = document.getElementById("reelDots");
+const xrayBtnR = document.getElementById("xrayBtn");
+const pauseBtn = document.getElementById("pauseBtn");
+const AUTO_MS = matchMedia("(prefers-reduced-motion: reduce)").matches ? 8000 : 4200;
+let reelIdx = 0, reelTimer = null, xrayOn = false, paused = false;
+REEL.forEach((r,i) => {
+  const d = document.createElement("i");
+  d.onclick = () => showReel(i);
+  dotsBox.appendChild(d);
+});
+function startAuto(){
+  if(reelTimer) clearInterval(reelTimer);
+  if(!paused) reelTimer = setInterval(()=>showReel(reelIdx+1), AUTO_MS);
+}
+function applyXray(){
+  const r = REEL[reelIdx];
+  if(!r.rig){ xrayBtnR.style.display = "none"; return; }
+  xrayBtnR.style.display = "";
+  reelSprite.classList.toggle(r.css, !xrayOn);
+  reelSprite.classList.toggle(r.css.replace("sp-","xr-"), xrayOn);
+  xrayBtnR.classList.toggle("on", xrayOn);
+  xrayBtnR.textContent = xrayOn ? "SKIN ✦" : "X-RAY 🦴";
+}
+function showReel(i){
+  reelIdx = i % REEL.length;
+  const r = REEL[reelIdx];
+  xrayOn = false;
+  reelSprite.classList.add("fade");
+  setTimeout(() => {
+    reelSprite.className = "reel-sprite fade " + r.css;
+    reelSprite.style.setProperty("--dur", r.dur + "s");
+    if(paused) reelSprite.style.animationPlayState = "paused";
+    document.getElementById("reelFam").textContent = r.fam;
+    document.getElementById("reelNm").textContent  = r.nm;
+    document.getElementById("reelDs").textContent  = r.ds;
+    void reelSprite.offsetWidth;
+    reelSprite.classList.remove("fade");
+    applyXray();
+  }, 240);
+  [...dotsBox.children].forEach((d,k)=>d.classList.toggle("on", k===reelIdx));
+  startAuto();
+}
+xrayBtnR.onclick = () => { xrayOn = !xrayOn; applyXray(); };
+pauseBtn.onclick = () => {
+  paused = !paused;
+  reelSprite.style.animationPlayState = paused ? "paused" : "running";
+  pauseBtn.classList.toggle("on", paused);
+  pauseBtn.textContent = paused ? "▶ PLAY" : "⏸ PAUSE";
+  startAuto();
+};
+showReel(0);
 
 /* ============ INIT ============ */
 buildStyles();
