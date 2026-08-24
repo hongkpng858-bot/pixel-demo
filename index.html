@@ -95,7 +95,7 @@
   .btn.small { font-size:8px; padding:10px 14px; }
 
   /* ===== SHOWREEL ===== */
-  .reel-wrap { position:relative; max-width:920px; margin:0 auto; }
+  .reel-wrap { position:relative; max-width:920px; margin:0 auto 52px; }
   .reel {
     position:relative; background:#0D1526; border:2px solid var(--border);
     box-shadow:0 0 0 2px #000, 8px 8px 0 rgba(0,0,0,.55);
@@ -123,16 +123,17 @@
   }
   .reel-sprite.fade { opacity:0; }
   @keyframes play { from{background-position-x:0} to{background-position-x:calc(-1*var(--frames)*var(--fw))} }
-  .reel-tag {
-    position:absolute; left:14px; top:12px; display:flex; flex-direction:column; gap:6px; text-align:left;
+  .reel-caption {
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    padding:14px 18px; border-top:2px solid var(--border); background:#0B1322;
   }
-  .reel-tag .fam {
-    font-family:var(--fd); font-size:10px; color:var(--on-accent);
+  .reel-caption .fam {
+    font-family:var(--fd); font-size:9px; color:var(--on-accent);
     background:var(--accent); padding:6px 10px; box-shadow:3px 3px 0 #000;
   }
-  .reel-tag .nm { font-family:var(--fd); font-size:8px; color:var(--gold); text-shadow:2px 2px 0 #000; }
-  .reel-tag .ds { font-size:19px; color:var(--muted); max-width:300px; text-shadow:1px 1px 0 #000; }
-  .dots { position:absolute; right:14px; bottom:12px; display:flex; gap:7px; }
+  .reel-caption .nm { font-family:var(--fd); font-size:9px; color:var(--gold); text-shadow:2px 2px 0 #000; }
+  .reel-caption .ds { font-size:19px; color:var(--muted); flex:1; min-width:220px; }
+  .dots { display:flex; gap:7px; margin-left:auto; }
   .dots i { width:10px; height:10px; background:#22304F; border:1px solid #000; cursor:pointer; }
   .dots i.on { background:var(--accent); }
   .reel-frame { position:absolute; width:22px; height:22px; border:3px solid var(--border); pointer-events:none; }
@@ -142,7 +143,8 @@
   .rf-br{bottom:8px;right:8px;border-left:none;border-top:none}
 
   /* ===== SECTIONS ===== */
-  section { padding:56px 0 8px; }
+  section { padding:60px 0 8px; scroll-margin-top:76px; }
+  .sec-head.gap { margin-top:56px; }
   .sec-head { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:8px; }
   .sec-head .no { font-family:var(--fd); font-size:10px; color:var(--primary); }
   h2.sec { font-family:var(--fd); font-size:clamp(13px,2.4vw,19px); margin:0; letter-spacing:1px; text-shadow:3px 3px 0 #000; }
@@ -156,6 +158,11 @@
     padding:26px;
   }
   @media (max-width:820px){ .synth { grid-template-columns:1fr; } }
+  @media (max-width:640px){
+    .reel-caption .ds { display:none; }
+    .reel-sprite { --z:3.2; }
+    .gsprite { --z:1.7; }
+  }
   .inputrow { display:flex; gap:10px; }
   input[type=text] {
     flex:1; min-width:0; background:#0A101F; color:var(--fg);
@@ -249,15 +256,7 @@
   .xr-robot{background-image:url("robot_rig@8x.png")}
   .xr-knight{background-image:url("knight_rig@8x.png")}
 
-  /* ===== FOOTER BITS ===== */
-  details.panel {
-    background:var(--card); border:2px solid var(--border); padding:18px 22px;
-    box-shadow:5px 5px 0 rgba(0,0,0,.45); font-size:20px; margin-top:40px;
-  }
-  summary { cursor:pointer; font-family:var(--fd); font-size:10px; letter-spacing:1px; }
-  pre { background:#0A101F; border:1px solid var(--border); padding:14px; overflow-x:auto; font-size:16px; color:var(--accent); }
   code { color:var(--gold); }
-  .famimg { width:100%; image-rendering:auto; display:block; border:1px solid var(--border); margin-top:12px; }
   footer {
     margin-top:70px; border-top:1px solid var(--border); padding:30px 0 44px;
     text-align:center; color:var(--muted); font-size:19px;
@@ -283,8 +282,6 @@
     <div class="navlinks">
       <a href="#synth">SYNTHESIZER</a>
       <a href="#dex">DEX</a>
-      <a href="#gallery">GALLERY</a>
-      <a href="#about">ABOUT</a>
     </div>
   </div>
 </nav>
@@ -308,12 +305,12 @@
       <span class="reel-frame rf-tl"></span><span class="reel-frame rf-tr"></span>
       <span class="reel-frame rf-bl"></span><span class="reel-frame rf-br"></span>
       <div class="reel-stage"><div class="reel-sprite sp-slime" id="reelSprite"></div></div>
-      <div class="reel-tag">
+      <div class="reel-caption">
         <span class="fam" id="reelFam">黏體族 · AMORPHOUS</span>
         <span class="nm" id="reelNm">SLIME HOP</span>
         <span class="ds" id="reelDs">最經典嘅入門生物 — 一壓一彈，永遠唔會死。</span>
+        <div class="dots" id="reelDots"></div>
       </div>
-      <div class="dots" id="reelDots"></div>
     </div>
   </div>
 </div>
@@ -358,6 +355,10 @@
       <span class="hint">↑ 2-4 幀 idle 動畫即時渲染</span>
     </div>
   </div>
+
+  <div class="sec-head gap"><span class="no">+</span><h2 class="sec">LIBRARY_ 預生成物種</h2></div>
+  <p class="sec-sub">十隻 Python 骨架動畫生成嘅完整角色 — 16 幀 sprite sheet，撳 X-RAY 睇穿骨骼。</p>
+  <div class="gal" id="gal"></div>
 </section>
 
 <!-- ===== DEX LOG ===== -->
@@ -366,35 +367,6 @@
   <p class="sec-sub">你最近發現嘅 12 隻物種（只存喺呢一頁，刷新會清空）。</p>
   <div class="dexgrid" id="dexGrid"><p class="hint">仲未發現任何物種 — 上面打啲字啦！</p></div>
 </section>
-<!-- ===== GALLERY ===== -->
-<section id="gallery" class="wrap">
-  <div class="sec-head"><span class="no">03</span><h2 class="sec">GALLERY_ 預生成物種</h2></div>
-  <p class="sec-sub">十隻 Python 骨架動畫生成嘅完整角色 — 16 幀 sprite sheet，撳 X-RAY 睇穿骨骼。</p>
-  <div class="gal" id="gal"></div>
-</section>
-
-<!-- ===== ABOUT ===== -->
-<section id="about" class="wrap">
-  <div class="sec-head"><span class="no">04</span><h2 class="sec">BLUEPRINTS_ 八大身體藍圖</h2></div>
-  <p class="sec-sub">合成器同預生成角色都跟住呢八族身體拓樸運作 — 認住藍圖，唔使窮舉物種。</p>
-  <details class="panel" open>
-    <summary>展開睇骨架家族圖表</summary>
-    <img class="famimg" src="rig_families.png" alt="八大骨架家族圖表" loading="lazy">
-  </details>
-  <details class="panel">
-    <summary>點樣嵌入你自己嘅網頁／遊戲？</summary>
-    <p>網頁（純 CSS，零 JS）：</p>
-<pre>.sprite {
-  width: 192px; aspect-ratio: 1;           /* 48px 邏輯 × 4 */
-  image-rendering: pixelated;
-  background: url("walker_sheet@8x.png") 0 0 / 3072px 100% no-repeat;
-  animation: play 1.28s steps(16) infinite;
-}
-@keyframes play { to { background-position-x: -3072px } }</pre>
-    <p>遊戲引擎：匯入 <code>*_sheet.png</code>（透明 RGBA），每格 48×48（walker）/ 32×32（slime），16 格，12.5 fps。合成器出嘅物種可以撳 <code>SAVE PNG</code> 匯出 48×48 透明圖直接用。</p>
-  </details>
-</section>
-
 </main>
 
 <footer>
