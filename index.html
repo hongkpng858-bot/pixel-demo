@@ -60,8 +60,14 @@
   }
   .slime  { --logical:32; --frames:16; background-image:url("slime_sheet@8x.png"); }
   .walker { --logical:48; --frames:16; background-image:url("walker_sheet@8x.png"); }
+  .dog    { --logical:48; --frames:16; background-image:url("dog_sheet@8x.png"); }
+  .robot  { --logical:48; --frames:16; background-image:url("robot_sheet@8x.png"); }
+  .knight { --logical:48; --frames:16; background-image:url("knight_sheet@8x.png"); }
   /* X 光模式：切換去骨架版 sheet */
   .walker.xray { background-image:url("walker_rig@8x.png"); }
+  .dog.xray    { background-image:url("dog_rig@8x.png"); }
+  .robot.xray  { background-image:url("robot_rig@8x.png"); }
+  .knight.xray { background-image:url("knight_rig@8x.png"); }
   .rigbtn { border-color:#ffaa28; color:#ffcf8a; }
   .rigbtn.on { background:#3a2c14; border-color:#ffaa28; }
   .paused { animation-play-state:paused !important; }
@@ -120,6 +126,42 @@
       <span class="fps">12.5 fps</span>
     </div>
   </div>
+
+  <div class="card" data-base-fps="12.5">
+    <h2>🐕 DOG TROT</h2>
+    <div class="stage"><div class="sprite dog"></div></div>
+    <div class="controls">
+      <button class="toggle">⏸ Pause</button>
+      <button class="rigbtn">🦴 Rig：OFF</button>
+      <select class="zoom"><option value="2">2×</option><option value="3">3×</option><option value="4" selected>4×</option><option value="6">6×</option></select>
+      <input class="speed" type="range" min="0.25" max="3" step="0.25" value="1">
+      <span class="fps">12.5 fps</span>
+    </div>
+  </div>
+
+  <div class="card" data-base-fps="12.5">
+    <h2>🤖 ROBOT WALK</h2>
+    <div class="stage"><div class="sprite robot"></div></div>
+    <div class="controls">
+      <button class="toggle">⏸ Pause</button>
+      <button class="rigbtn">🦴 Rig：OFF</button>
+      <select class="zoom"><option value="2">2×</option><option value="3">3×</option><option value="4" selected>4×</option><option value="6">6×</option></select>
+      <input class="speed" type="range" min="0.25" max="3" step="0.25" value="1">
+      <span class="fps">12.5 fps</span>
+    </div>
+  </div>
+
+  <div class="card" data-base-fps="12.5">
+    <h2>⚔️ ARMORED KNIGHT</h2>
+    <div class="stage"><div class="sprite knight"></div></div>
+    <div class="controls">
+      <button class="toggle">⏸ Pause</button>
+      <button class="rigbtn">🦴 Rig：OFF</button>
+      <select class="zoom"><option value="2">2×</option><option value="3">3×</option><option value="4" selected>4×</option><option value="6">6×</option></select>
+      <input class="speed" type="range" min="0.25" max="3" step="0.25" value="1">
+      <span class="fps">12.5 fps</span>
+    </div>
+  </div>
 </div>
 
 <details>
@@ -135,7 +177,7 @@
   <p>遊戲引擎：匯入 <code>*_sheet.png</code>（透明 RGBA），每格 48×48（walker）／32×32（slime），16 格，12.5 fps。</p>
 </details>
 
-<footer>generated locally · make_slime.py + make_walker.py · FK skeleton rig</footer>
+<footer>generated locally · make_{slime,walker,dog,robot,knight}.py · FK skeleton rigs · 5 characters</footer>
 
 <script>
 document.querySelectorAll(".card").forEach(card => {

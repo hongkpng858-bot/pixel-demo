@@ -4,5 +4,8 @@ set -euo pipefail
 cd "$(dirname "$0")"
 python3 make_slime.py
 python3 make_walker.py
+python3 make_dog.py
+python3 make_robot.py
+python3 make_knight.py
 python3 verify.py
 echo "== build OK =="
