@@ -1,0 +1,35 @@
+{
+  "name": "fish_swim",
+  "rig": {
+    "bones": [
+      "spine.0",
+      "spine.1",
+      "spine.2",
+      "spine.3",
+      "spine.4",
+      "spine.5",
+      "spine.6",
+      "spine.7",
+      "spine.8",
+      "tailfin",
+      "dorsal",
+      "pectoral"
+    ],
+    "method": "traveling sine wave, amplitude increases caudally"
+  },
+  "frameSize": [
+    48,
+    48
+  ],
+  "frameCount": 16,
+  "fps": 12.5,
+  "loop": true,
+  "files": {
+    "previewGif": "fish.gif",
+    "rigPreviewGif": "fish_rig.gif",
+    "spriteSheetLogical": "fish_sheet.png",
+    "spriteSheetScaled": "fish_sheet@8x.png",
+    "rigSheetScaled": "fish_rig@8x.png",
+    "scale": 8
+  }
+}

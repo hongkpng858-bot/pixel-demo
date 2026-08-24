@@ -63,11 +63,21 @@
   .dog    { --logical:48; --frames:16; background-image:url("dog_sheet@8x.png"); }
   .robot  { --logical:48; --frames:16; background-image:url("robot_sheet@8x.png"); }
   .knight { --logical:48; --frames:16; background-image:url("knight_sheet@8x.png"); }
+  .bird    { --logical:48; --frames:16; background-image:url("bird_sheet@8x.png"); }
+  .serpent { --logical:48; --frames:16; background-image:url("serpent_sheet@8x.png"); }
+  .fish    { --logical:48; --frames:16; background-image:url("fish_sheet@8x.png"); }
+  .bug     { --logical:48; --frames:16; background-image:url("bug_sheet@8x.png"); }
+  .ghost   { --logical:48; --frames:16; background-image:url("ghost_sheet@8x.png"); }
   /* X 光模式：切換去骨架版 sheet */
   .walker.xray { background-image:url("walker_rig@8x.png"); }
   .dog.xray    { background-image:url("dog_rig@8x.png"); }
   .robot.xray  { background-image:url("robot_rig@8x.png"); }
   .knight.xray { background-image:url("knight_rig@8x.png"); }
+  .bird.xray    { background-image:url("bird_rig@8x.png"); }
+  .serpent.xray { background-image:url("serpent_rig@8x.png"); }
+  .fish.xray    { background-image:url("fish_rig@8x.png"); }
+  .bug.xray     { background-image:url("bug_rig@8x.png"); }
+  .ghost.xray   { background-image:url("ghost_rig@8x.png"); }
   .rigbtn { border-color:#ffaa28; color:#ffcf8a; }
   .rigbtn.on { background:#3a2c14; border-color:#ffaa28; }
   .paused { animation-play-state:paused !important; }
@@ -170,11 +180,71 @@
       <span class="fps">12.5 fps</span>
     </div>
   </div>
+
+  <div class="card" data-base-fps="12.5">
+    <h2>🐦 BIRD FLAP</h2>
+    <div class="stage"><div class="sprite bird"></div></div>
+    <div class="controls">
+      <button class="toggle">⏸ Pause</button>
+      <button class="rigbtn">🦴 Rig：OFF</button>
+      <select class="zoom"><option value="2">2×</option><option value="3">3×</option><option value="4" selected>4×</option><option value="6">6×</option></select>
+      <input class="speed" type="range" min="0.25" max="3" step="0.25" value="1">
+      <span class="fps">12.5 fps</span>
+    </div>
+  </div>
+
+  <div class="card" data-base-fps="12.5">
+    <h2>🐍 SERPENT SLITHER</h2>
+    <div class="stage"><div class="sprite serpent"></div></div>
+    <div class="controls">
+      <button class="toggle">⏸ Pause</button>
+      <button class="rigbtn">🦴 Rig：OFF</button>
+      <select class="zoom"><option value="2">2×</option><option value="3">3×</option><option value="4" selected>4×</option><option value="6">6×</option></select>
+      <input class="speed" type="range" min="0.25" max="3" step="0.25" value="1">
+      <span class="fps">12.5 fps</span>
+    </div>
+  </div>
+
+  <div class="card" data-base-fps="12.5">
+    <h2>🐟 FISH SWIM</h2>
+    <div class="stage"><div class="sprite fish"></div></div>
+    <div class="controls">
+      <button class="toggle">⏸ Pause</button>
+      <button class="rigbtn">🦴 Rig：OFF</button>
+      <select class="zoom"><option value="2">2×</option><option value="3">3×</option><option value="4" selected>4×</option><option value="6">6×</option></select>
+      <input class="speed" type="range" min="0.25" max="3" step="0.25" value="1">
+      <span class="fps">12.5 fps</span>
+    </div>
+  </div>
+
+  <div class="card" data-base-fps="12.5">
+    <h2>🐜 BUG WALK</h2>
+    <div class="stage"><div class="sprite bug"></div></div>
+    <div class="controls">
+      <button class="toggle">⏸ Pause</button>
+      <button class="rigbtn">🦴 Rig：OFF</button>
+      <select class="zoom"><option value="2">2×</option><option value="3">3×</option><option value="4" selected>4×</option><option value="6">6×</option></select>
+      <input class="speed" type="range" min="0.25" max="3" step="0.25" value="1">
+      <span class="fps">12.5 fps</span>
+    </div>
+  </div>
+
+  <div class="card" data-base-fps="12.5">
+    <h2>👻 GHOST FLOAT</h2>
+    <div class="stage"><div class="sprite ghost"></div></div>
+    <div class="controls">
+      <button class="toggle">⏸ Pause</button>
+      <button class="rigbtn">🦴 Rig：OFF</button>
+      <select class="zoom"><option value="2">2×</option><option value="3">3×</option><option value="4" selected>4×</option><option value="6">6×</option></select>
+      <input class="speed" type="range" min="0.25" max="3" step="0.25" value="1">
+      <span class="fps">12.5 fps</span>
+    </div>
+  </div>
 </div>
 
 <section class="chart">
   <h2>🗺️ SKELETAL BODY-PLAN FAMILIES</h2>
-  <p>八大身體拓樸家族 —— 認住藍圖，唔使窮舉物種；本站已有 humanoid / quadruped / soft-body 三族示範</p>
+  <p>八大身體拓樸家族 —— 認住藍圖，唔使窮舉物種；本站八族全部有真動畫示範 ✓</p>
   <img src="rig_families.png" alt="八大骨架家族圖表" loading="lazy">
 </section>
 
@@ -191,7 +261,7 @@
   <p>遊戲引擎：匯入 <code>*_sheet.png</code>（透明 RGBA），每格 48×48（walker）／32×32（slime），16 格，12.5 fps。</p>
 </details>
 
-<footer>generated locally · make_{slime,walker,dog,robot,knight}.py · FK skeleton rigs · 5 characters</footer>
+<footer>generated locally · 10 characters · all 8 body-plan families · FK skeleton rigs</footer>
 
 <script>
 document.querySelectorAll(".card").forEach(card => {

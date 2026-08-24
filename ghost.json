@@ -1,0 +1,26 @@
+{
+  "name": "ghost_float",
+  "rig": {
+    "bones": [
+      "dome-outline",
+      "skirt-wave-control-points",
+      "wisps.x3"
+    ],
+    "method": "boneless: volume itself deforms (soft-body family)"
+  },
+  "frameSize": [
+    48,
+    48
+  ],
+  "frameCount": 16,
+  "fps": 12.5,
+  "loop": true,
+  "files": {
+    "previewGif": "ghost.gif",
+    "rigPreviewGif": "ghost_rig.gif",
+    "spriteSheetLogical": "ghost_sheet.png",
+    "spriteSheetScaled": "ghost_sheet@8x.png",
+    "rigSheetScaled": "ghost_rig@8x.png",
+    "scale": 8
+  }
+}

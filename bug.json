@@ -1,0 +1,27 @@
+{
+  "name": "bug_walk",
+  "rig": {
+    "bones": [
+      "shell",
+      "head",
+      "antenna.x2",
+      "legs.x6 (coxa+femur+tibia)"
+    ],
+    "method": "tripod gait (alternating leg triangles)"
+  },
+  "frameSize": [
+    48,
+    48
+  ],
+  "frameCount": 16,
+  "fps": 12.5,
+  "loop": true,
+  "files": {
+    "previewGif": "bug.gif",
+    "rigPreviewGif": "bug_rig.gif",
+    "spriteSheetLogical": "bug_sheet.png",
+    "spriteSheetScaled": "bug_sheet@8x.png",
+    "rigSheetScaled": "bug_rig@8x.png",
+    "scale": 8
+  }
+}

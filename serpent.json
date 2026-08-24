@@ -1,0 +1,36 @@
+{
+  "name": "serpent_slither",
+  "rig": {
+    "bones": [
+      "spine.0",
+      "spine.1",
+      "spine.2",
+      "spine.3",
+      "spine.4",
+      "spine.5",
+      "spine.6",
+      "spine.7",
+      "spine.8",
+      "spine.9",
+      "spine.10",
+      "spine.11",
+      "head"
+    ],
+    "method": "traveling sine wave along chain (no limbs)"
+  },
+  "frameSize": [
+    48,
+    48
+  ],
+  "frameCount": 16,
+  "fps": 12.5,
+  "loop": true,
+  "files": {
+    "previewGif": "serpent.gif",
+    "rigPreviewGif": "serpent_rig.gif",
+    "spriteSheetLogical": "serpent_sheet.png",
+    "spriteSheetScaled": "serpent_sheet@8x.png",
+    "rigSheetScaled": "serpent_rig@8x.png",
+    "scale": 8
+  }
+}

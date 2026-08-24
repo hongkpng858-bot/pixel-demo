@@ -1,0 +1,28 @@
+{
+  "name": "bird_flap",
+  "rig": {
+    "bones": [
+      "spine",
+      "tail",
+      "head",
+      "leg.x2",
+      "wing.L/R (2-segment FK)"
+    ],
+    "method": "forward-kinematics wing flap + body counter-bob"
+  },
+  "frameSize": [
+    48,
+    48
+  ],
+  "frameCount": 16,
+  "fps": 12.5,
+  "loop": true,
+  "files": {
+    "previewGif": "bird.gif",
+    "rigPreviewGif": "bird_rig.gif",
+    "spriteSheetLogical": "bird_sheet.png",
+    "spriteSheetScaled": "bird_sheet@8x.png",
+    "rigSheetScaled": "bird_rig@8x.png",
+    "scale": 8
+  }
+}
