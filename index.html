@@ -50,7 +50,7 @@
     background:rgba(11,17,32,.82); backdrop-filter:blur(8px);
     border-bottom:1px solid var(--border);
   }
-  .navin { display:flex; align-items:center; gap:18px; height:58px; }
+  .navin { display:flex; align-items:center; gap:18px; min-height:58px; flex-wrap:wrap; }
   .logo { display:flex; align-items:center; gap:10px; font-family:var(--fd); font-size:11px; color:var(--fg); text-decoration:none; letter-spacing:1px; }
   .logo i {
     width:16px; height:16px; background:var(--accent); display:inline-block;
@@ -168,10 +168,6 @@
     padding:22px;
   }
   @media (max-width:820px){ .synth { grid-template-columns:1fr; } }
-  @media (max-width:640px){
-    .reel-tag .ds { display:none; }
-    .reel-sprite { --z:3.2; }
-  }
   .inputrow { display:flex; gap:10px; }
   input[type=text] {
     flex:1; min-width:0; background:#0A101F; color:var(--fg);
@@ -199,17 +195,18 @@
   .bar { height:14px; background:#0A101F; border:1px solid var(--border); position:relative; }
   .bar i { position:absolute; inset:0; right:auto; width:0; background:linear-gradient(90deg,var(--secondary),var(--accent)); transition:width .35s steps(8); }
   .stats em { font-style:normal; color:var(--accent); font-variant-numeric:tabular-nums; }
-  .viewer { display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .viewer { display:flex; flex-direction:column; }
   .canvas-box {
-    position:relative; padding:14px; background:#0A101F;
+    position:relative; flex:1; min-height:300px; padding:14px; background:#0A101F;
     border:2px solid var(--border); box-shadow:inset 0 0 30px rgba(0,0,0,.7);
+    display:flex; align-items:center; justify-content:center;
   }
   .canvas-box::after {
     content:"PREVIEW 48×48"; position:absolute; left:10px; bottom:-2px;
     font-family:var(--fd); font-size:7px; color:#3D4C6B; letter-spacing:1px;
   }
   #dexView {
-    display:block; width:264px; height:264px; image-rendering:pixelated;
+    display:block; width:min(320px,100%); height:auto; aspect-ratio:1/1; image-rendering:pixelated;
     background:repeating-conic-gradient(#10192B 0% 25%, #16223A 0% 50%) 0 0/24px 24px;
   }
 
@@ -259,6 +256,32 @@
     .pill b,h1 .cursor { animation:none; }
     .crt { display:none; }
     html { scroll-behavior:auto; }
+  }
+  /* —— 手機可讀性：放喺最尾確保覆蓋所有 base rules —— */
+  @media (max-width:640px){
+    .reel-tag .ds { display:none; }
+    .reel-sprite { --z:3.2; }
+    .navlinks a { font-size:9px; padding:10px 8px; }
+    .logo { font-size:10px; }
+    .pill { font-size:9px; }
+    .sub { font-size:17px; }
+    .btn { font-size:11px; padding:14px 18px; }
+    .btn.small { font-size:9px; padding:12px 16px; }
+    .rbtn { font-size:8px; padding:9px 10px; }
+    .dots i { width:13px; height:13px; }
+    .reel-tag .fam,.reel-tag .nm { font-size:9px; }
+    .sec-sub { font-size:16px; }
+    .chip { font-size:16px; padding:6px 14px; }
+    input[type=text] { font-size:18px; }
+    .nm { font-size:13px; }
+    .tag { font-size:9px; }
+    .lore { font-size:16px; }
+    .stats { font-size:18px; }
+    .stats b { font-size:9px; }
+    .dexitem canvas { width:84px; height:84px; }
+    .dexitem span { font-size:10px; }
+    #dexView { width:min(210px,60vw); }
+    footer { font-size:17px; }
   }
 </style>
 </head>
@@ -345,7 +368,6 @@
     </div>
     <div class="viewer">
       <div class="canvas-box"><canvas id="dexView" width="48" height="48" aria-label="物種預覽"></canvas></div>
-      <span class="hint">↑ 2-4 幀 idle 動畫即時渲染</span>
     </div>
   </div>
 
