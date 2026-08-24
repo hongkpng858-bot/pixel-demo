@@ -202,9 +202,12 @@
     display:flex; align-items:center; justify-content:center;
   }
   .canvas-box::after {
-    content:"PREVIEW 48×48"; position:absolute; left:10px; bottom:-2px;
-    font-family:var(--fd); font-size:7px; color:#3D4C6B; letter-spacing:1px;
+    content:"PREVIEW 48×48"; position:absolute; left:12px; bottom:6px;
+    font-family:var(--fd); font-size:12px; color:var(--muted);
+    letter-spacing:1px; text-shadow:2px 2px 0 #000;
   }
+  .pvctl { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; align-items:center; }
+  .pvctl .lbl { font-family:var(--fd); font-size:8px; color:var(--muted); letter-spacing:1px; margin-right:2px; }
   #dexView {
     display:block; width:min(320px,100%); height:auto; aspect-ratio:1/1; image-rendering:pixelated;
     background:repeating-conic-gradient(#10192B 0% 25%, #16223A 0% 50%) 0 0/24px 24px;
@@ -280,6 +283,10 @@
     .stats b { font-size:9px; }
     .dexitem canvas { width:84px; height:84px; }
     .dexitem span { font-size:10px; }
+    .canvas-box::after { font-size:13px; bottom:8px; left:12px; }
+    .pvctl { gap:7px; }
+    .pvctl .rbtn { font-size:10px; padding:10px 12px; }
+    .pvctl .lbl { display:none; }
     #dexView { width:min(210px,60vw); }
     footer { font-size:17px; }
   }
@@ -368,6 +375,14 @@
     </div>
     <div class="viewer">
       <div class="canvas-box"><canvas id="dexView" width="48" height="48" aria-label="物種預覽"></canvas></div>
+      <div class="pvctl">
+        <span class="lbl">ACT_</span>
+        <button class="rbtn on" data-act="walk" aria-pressed="true">行 WALK</button>
+        <button class="rbtn" data-act="run">跑 RUN</button>
+        <button class="rbtn" data-act="jump">跳 JUMP</button>
+        <button class="rbtn" data-act="rest">息 REST</button>
+        <button class="rbtn" id="pvXrayBtn" aria-label="切換預覽骨骼 X-Ray 檢視">X-RAY 🦴</button>
+      </div>
     </div>
   </div>
 
@@ -503,48 +518,63 @@ function eyes(x1,x2,y,rnd,big){
   solo(x1+(big?1:0)+(rnd()<0.5?0:1),y+1,1,1,P.pupil);
   solo(x2+(big?1:0)+(rnd()<0.5?0:1),y+1,1,1,P.pupil);
 }
-function drawCreature(fam,f,N,rnd){
-  const bob = f < N/2 ? -1 : 0, br = f % 2, gY = 44;
+function drawCreature(fam,f,N,rnd,act){
+  act=act||"walk";
+  const ph=f%2, t=f/N;
+  let bob=0, br=ph, gY=44;
+  if(act==="walk"){ bob=f<N/2?-1:0; }
+  else if(act==="run"){ bob=-Math.round(Math.abs(Math.sin(t*Math.PI*2))*3); }
+  else if(act==="jump"){ bob=-Math.round(Math.sin(Math.PI*t)*7); }
+  else { bob=(f%4<1)?-1:0; }
+  const AIR=act==="jump"&&bob<=-3, RUN=act==="run", REST=act==="rest";
   switch(fam){
     case "bipedal": {
       const bw=12+br*2,bh=14-br*2,bx=24-bw/2,by=gY-bh-8+bob;
       sym(bx,by,bw/2,bh,P.main); solo(22,by+3,4,bh-6,P.belly);
       const hy=by-9+bob;
       sym(17,hy,7,8,P.pale); eyes(20,26,hy+3,rnd,true);
-      sym(bx-3,gY-6,3,6,P.deep); sym(bx-4,by+4,3,8,P.deep);
+      const ll=AIR?4:6, l1=RUN&&ph?1:0, l2=RUN&&!ph?1:0;
+      solo(bx-3,gY-ll-l1,3,ll,P.deep); solo(48-bx,gY-ll-l2,3,ll,P.deep);
+      const al=AIR?5:8, ay=by+4+(AIR?-3:0);
+      if(RUN){ solo(bx-4,ay+(ph?-2:2),3,al,P.deep); solo(47-bx,ay+(ph?2:-2),3,al,P.deep); }
+      else sym(bx-4,ay,3,al,P.deep);
       break;
     }
     case "quadruped": {
       const bh=10-br,bx=10,by=gY-bh-8+bob;
       sym(bx,by,14,bh,P.main); solo(20,by+2,6,bh-3,P.belly);
       sym(6,by-4+bob,9,7,P.pale); eyes(9,35,by-2+bob,rnd,false);
-      sym(bx+1,gY-6,3,6,P.deep); sym(bx+9,gY-6,3,6,P.deep);
+      const lq=AIR?4:6, q1=(RUN&&ph)?1:0, q2=(RUN&&!ph)?1:0;
+      solo(bx+1,gY-lq-q1,3,lq,P.deep); solo(34,gY-lq-q2,3,lq,P.deep);
+      solo(bx+9,gY-lq-q2,3,lq,P.deep); solo(26,gY-lq-q1,3,lq,P.deep);
       sym(38,by-2+bob,3,3,P.main);
       break;
     }
     case "serpentine": {
+      const amp=REST?1:RUN?3:2, stp=REST?8:RUN?4:6;
       for(let i=0;i<6;i++){
-        const yy=8+i*6+(i%2===f%2?-1:0)+bob, wob=Math.round(Math.sin(i+f)*2);
-        sym(21+wob,yy,3,6,i%2?P.main:P.deep);
+        const yy=Math.round(8+i*stp)+(i%2===f%2?-1:0)+bob, wob=Math.round(Math.sin(i+f)*amp);
+        sym(Math.min(21+wob,26),yy,3,stp-1,i%2?P.main:P.deep);
       }
-      const hy=4+bob;
+      const hy=4+bob+(AIR?-2:0);
       sym(18,hy,6,7,P.pale); eyes(20,26,hy+2,rnd,false);
       solo(22,hy+5,4,2,"#DC2626");
       break;
     }
     case "avian": {
-      const by=gY-16+bob*2;
+      const fly=AIR||RUN, by=gY-16+bob*2-(fly?2:0);
       sym(19,by,5,9,P.main); solo(22,by+2,4,5,P.belly);
-      const wy=by+(f%2?-3:1);
+      const wy=by+(fly?(f%2?-6:-1):(f%2?-3:1));
       sym(10,wy,9,4,P.pale);
       sym(15,by-7+bob,7,7,P.pale); eyes(17,29,by-5+bob,rnd,false);
-      solo(22,by-3+bob,4,2,"#F59E0B"); sym(20,gY-4,3,4,"#F59E0B");
+      solo(22,by-3+bob,4,2,"#F59E0B");
+      if(!fly){ sym(20,gY-4,3,4,"#F59E0B"); }
       break;
     }
     case "aquatic": {
-      const by=gY-18+bob*2;
+      const by=gY-18+bob*2-(AIR?3:0);
       sym(15,by,9,11,P.main); solo(20,by+3,4,5,P.belly);
-      const ty=by+(f%2?1:-1);
+      const ty=by+((f%(REST?4:2))?(REST?0:1):-1);
       sym(8,ty,7,7,P.pale); sym(24,by+4,3,4,P.deep); solo(19,by-3,3,3,P.pale);
       eyes(18,28,by+3,rnd,false);
       break;
@@ -553,25 +583,27 @@ function drawCreature(fam,f,N,rnd){
       const by=gY-20+bob;
       sym(20,by,4,6,P.deep); sym(19,by+7,5,8,P.main);
       eyes(21,25,by+1,rnd,false);
-      const ly=by+15;
-      for(let i=0;i<3;i++){ sym(16+i*2,ly-i*2,2,2+(f%2?1:0),P.deep); }
+      const ly=by+15, lift=(AIR||RUN)?(ph?1:-1):0, rlift=(RUN&&ph===0)||(AIR&&f%2)?1:0;
+      for(let i=0;i<3;i++){ sym(16+i*2,ly-i*2-lift*(i-1),2,2+(ph&&!REST?1:0),P.deep); }
+      if(RUN||AIR){ sym(27,ly-1+rlift,3,3,P.deep); }
       sym(21,by-4,1,4,P.deep); sym(26,by-4,1,4,P.deep);
       break;
     }
     case "amorphous": {
-      const r=9+br;
-      sym(24-r,gY-r*2-2,r,r*2,P.main);
-      solo(22,gY-r*2+3,4,3,P.belly);
-      eyes(20,26,gY-r*2+4,rnd,true);
-      solo(21,gY-4+br,6,2,P.deep);
+      const sq=act==="jump"?Math.max(bob,-7):0, r=9+br-(act==="jump"?1:0);
+      const yy=gY-r*2-2+bob-sq*0;
+      sym(24-r,gY-r*2-2+bob,r,r*2-bob*0,P.main);
+      solo(22,yy+5+(sq?-2:0),4,3,P.belly);
+      eyes(20,26,yy+6+(sq?-2:0),rnd,true);
+      solo(21,gY-4+br+(REST?0:bob),6,2,P.deep);
       break;
     }
     case "floating": {
-      const by=10+bob*2;
+      const by=10+bob*2+(act==="run"?-2:0);
       sym(15,by,9,12,P.pale); solo(21,by+4,6,6,P.main);
       eyes(18,27,by+4,rnd,true);
       for(let i=0;i<4;i++){
-        const tx=16+i*4, tl=6+((i+f)%2?2:0);
+        const tx=16+i*4, tl=6+((i+f)%(REST?4:2)?2:0)+(act==="jump"?2:0);
         solo(tx,by+12,2,tl,P.main);
       }
       break;
@@ -582,7 +614,9 @@ function setBar(k,v){
   document.getElementById("bar"+k).style.width=v+"%";
   document.getElementById("v"+k).textContent=v;
 }
-let curFrames=[], curIdx=0, curTimer=null, curSeedStr="", counter=0;
+let curFrames=[], curIdx=0, curTimer=null, curSeedStr="", counter=0, curAct="walk", lastDexSeed=null;
+const ACT_MS={walk:320,run:150,jump:115,rest:430};
+let pvXray=false;
 const dexGrid = document.getElementById("dexGrid");
 function addDexEntry(name, frameCanvas){
   if(dexGrid.querySelector(".hint")) dexGrid.innerHTML="";
@@ -601,12 +635,13 @@ function generate(text){
   P=makePalette(mulberry32(seed^0x9E3779B9));
   const name=makeName(mulberry32(seed^0x85EBCA6B));
   const lore=makeLore(mulberry32(seed^0xC2B2AE35));
-  const N=2+(seed>>3)%3;
+  const baseN=2+(seed>>3)%3;
+  const N=curAct==="jump"?Math.max(baseN,8):curAct==="run"?Math.max(baseN,6):curAct==="walk"?Math.max(baseN,4):baseN;
   curFrames=[];
   for(let f=0;f<N;f++){
     const oc=document.createElement("canvas"); oc.width=48; oc.height=48;
     C=oc.getContext("2d");
-    drawCreature(F.key,f,N,mulberry32(seed));
+    drawCreature(F.key,f,N,mulberry32(seed),curAct);
     curFrames.push(oc);
   }
   document.getElementById("dexName").textContent=name;
@@ -617,11 +652,14 @@ function generate(text){
   if(curTimer) clearInterval(curTimer);
   curIdx=0;
   vctx.clearRect(0,0,48,48); vctx.drawImage(curFrames[0],0,0);
+  if(pvXray) drawXray();
   curTimer=setInterval(()=>{
     curIdx=(curIdx+1)%curFrames.length;
     vctx.clearRect(0,0,48,48); vctx.drawImage(curFrames[curIdx],0,0);
-  },320);
-  addDexEntry(name,curFrames[0]);
+    if(pvXray) drawXray();
+  },ACT_MS[curAct]);
+  if(lastDexSeed!==seedStr) addDexEntry(name,curFrames[0]);
+  lastDexSeed=seedStr;
   curSeedStr=seedStr;
 }
 document.getElementById("genBtn").onclick=()=>generate(document.getElementById("seedInput").value);
@@ -638,6 +676,42 @@ document.getElementById("saveBtn").onclick=()=>{
   const a=document.createElement("a");
   a.download="species_"+(curSeedStr||"none").replace(/\W+/g,"_").slice(0,20)+".png";
   a.href=view.toDataURL("image/png"); a.click();
+};
+/* —— 01 預覽：動作切換 + X-Ray（程序化生物冇 rig 圖，用 canvas 即場畫骨骼 overlay）—— */
+function drawXray(){
+  const sw=(curAct==="rest")?0:(curAct==="run"?3:2)*(curIdx%2?-1:1), jump=curAct==="jump";
+  const hipY=jump?27:30, shY=jump?19:21, headY=jump?13:14, legY=jump?37:43;
+  vctx.save();
+  vctx.globalAlpha=.5; vctx.fillStyle="#0B1120"; vctx.fillRect(0,0,48,48);
+  vctx.globalAlpha=1; vctx.strokeStyle="#FB923C"; vctx.lineWidth=1;
+  vctx.beginPath();
+  vctx.moveTo(24,headY); vctx.lineTo(24,hipY);
+  vctx.moveTo(24,shY); vctx.lineTo(16,shY+6+sw*.5);
+  vctx.moveTo(24,shY); vctx.lineTo(32,shY+6-sw*.5);
+  vctx.moveTo(24,hipY); vctx.lineTo(19+sw,legY);
+  vctx.moveTo(24,hipY); vctx.lineTo(29-sw,legY);
+  vctx.stroke();
+  vctx.beginPath(); vctx.arc(24,headY-3,3,0,7); vctx.stroke();
+  vctx.fillStyle="#22C55E";
+  [[24,shY],[24,hipY],[19+sw,legY],[29-sw,legY],[16,shY+6],[32,shY+6]].forEach(pt=>vctx.fillRect(pt[0]-1,pt[1]-1,2,2));
+  vctx.restore();
+}
+document.querySelectorAll(".pvctl [data-act]").forEach(b=>{
+  b.onclick=()=>{
+    curAct=b.dataset.act;
+    document.querySelectorAll(".pvctl [data-act]").forEach(x=>{
+      x.classList.toggle("on",x===b); x.setAttribute("aria-pressed",x===b?"true":"false");
+    });
+    generate(lastDexSeed||"火龍");
+  };
+});
+const pvXrayBtn=document.getElementById("pvXrayBtn");
+pvXrayBtn.onclick=()=>{
+  pvXray=!pvXray;
+  pvXrayBtn.classList.toggle("on",pvXray);
+  pvXrayBtn.textContent=pvXray?"SKIN ✦":"X-RAY 🦴";
+  vctx.clearRect(0,0,48,48); vctx.drawImage(curFrames[curIdx]||curFrames[0],0,0);
+  if(pvXray) drawXray();
 };
 generate("火龍");
 </script>
