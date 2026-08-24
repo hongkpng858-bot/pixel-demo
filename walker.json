@@ -21,8 +21,10 @@
   "loop": true,
   "files": {
     "previewGif": "walker.gif",
+    "rigPreviewGif": "walker_rig.gif",
     "spriteSheetLogical": "walker_sheet.png",
     "spriteSheetScaled": "walker_sheet@8x.png",
+    "rigSheetScaled": "walker_rig@8x.png",
     "scale": 8
   }
 }
