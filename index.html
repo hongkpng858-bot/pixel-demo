@@ -3,12 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pixel Species Lab — 文字生成像素物種</title>
-<meta name="description" content="輸入任何文字，即時合成你專屬嘅 Pixel Art 物種。八大身體藍圖 · 純本地運算 · 免費玩。">
+<title>Pixel Species Lab — 打一句字 生成成隻遊戲角色</title>
+<meta name="description" content="輸入任何文字，即時生成可玩嘅 Pixel Art 遊戲角色：六大動作 sprite sheet、四套風格、無縫套風格、無縫貼圖。純本地運算 · 免費。">
 <style>
-  /* Design system: ui-ux-pro-max "Pixel Art" — arcade palette, Press Start 2P + VT323 */
   @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
-
   :root {
     color-scheme: dark;
     --primary:#DC2626;   --on-primary:#FFF;
@@ -22,272 +20,192 @@
   }
   * { box-sizing:border-box; }
   html { scroll-behavior:smooth; }
-  body {
-    margin:0; min-height:100vh; background:var(--bg); color:var(--fg);
-    font-family:var(--fb); font-size:21px; line-height:1.4;
-    overflow-x:hidden;
-  }
-  /* ambient glows */
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--fg);
+    font-family:var(--fb); font-size:21px; line-height:1.4; overflow-x:hidden; }
   .glow { position:fixed; border-radius:50%; filter:blur(120px); pointer-events:none; z-index:0; }
-  .glow.g1 { width:560px; height:560px; background:rgba(220,38,38,.13); top:-180px; left:-140px; }
-  .glow.g2 { width:520px; height:520px; background:rgba(37,99,235,.16); top:22vh; right:-180px; }
-  .glow.g3 { width:480px; height:480px; background:rgba(34,197,94,.08); bottom:-200px; left:30vw; }
-  .gridbg {
-    position:fixed; inset:0; z-index:0; pointer-events:none;
+  .glow.g1 { width:560px;height:560px;background:rgba(220,38,38,.13);top:-180px;left:-140px; }
+  .glow.g2 { width:520px;height:520px;background:rgba(37,99,235,.16);top:22vh;right:-180px; }
+  .glow.g3 { width:480px;height:480px;background:rgba(34,197,94,.08);bottom:-200px;left:30vw; }
+  .gridbg { position:fixed;inset:0;z-index:0;pointer-events:none;
     background-image:linear-gradient(rgba(148,163,184,.05) 1px,transparent 1px),
                      linear-gradient(90deg,rgba(148,163,184,.05) 1px,transparent 1px);
     background-size:28px 28px;
-    mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 40%,transparent 100%);
-  }
-  .crt { position:fixed; inset:0; z-index:98; pointer-events:none;
+    mask-image:radial-gradient(ellipse 90% 60% at 50% 0%,#000 40%,transparent 100%); }
+  .crt { position:fixed;inset:0;z-index:98;pointer-events:none;
     background:repeating-linear-gradient(0deg,rgba(0,0,0,.15) 0 1px,transparent 1px 3px); }
   main,nav,footer { position:relative; z-index:2; }
-  .wrap { max-width:1080px; margin:0 auto; padding:0 20px; }
+  .wrap { max-width:1080px;margin:0 auto;padding:0 20px; }
 
   /* ===== NAV ===== */
-  nav {
-    position:sticky; top:0; z-index:50;
-    background:rgba(11,17,32,.82); backdrop-filter:blur(8px);
-    border-bottom:1px solid var(--border);
-  }
-  .navin { display:flex; align-items:center; gap:18px; min-height:58px; flex-wrap:wrap; }
-  .logo { display:flex; align-items:center; gap:10px; font-family:var(--fd); font-size:11px; color:var(--fg); text-decoration:none; letter-spacing:1px; }
-  .logo i {
-    width:16px; height:16px; background:var(--accent); display:inline-block;
-    box-shadow:3px 3px 0 var(--secondary), -3px -3px 0 var(--primary);
-  }
-  .navlinks { margin-left:auto; display:flex; gap:4px; }
-  .navlinks a {
-    font-family:var(--fd); font-size:8px; letter-spacing:1px; text-decoration:none;
-    color:var(--muted); padding:8px 10px; border-radius:0;
-  }
-  .navlinks a:hover { color:var(--fg); background:var(--card); }
+  nav { position:sticky;top:0;z-index:50;background:rgba(11,17,32,.82);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--border); }
+  .navin { display:flex;align-items:center;gap:18px;min-height:58px;flex-wrap:wrap; }
+  .logo { display:flex;align-items:center;gap:10px;font-family:var(--fd);font-size:11px;
+    color:var(--fg);text-decoration:none;letter-spacing:1px; }
+  .logo i { width:16px;height:16px;background:var(--accent);display:inline-block;
+    box-shadow:3px 3px 0 var(--secondary),-3px -3px 0 var(--primary); }
+  .navlinks { margin-left:auto;display:flex;gap:4px; }
+  .navlinks a { font-family:var(--fd);font-size:8px;letter-spacing:1px;text-decoration:none;
+    color:var(--muted);padding:8px 10px; }
+  .navlinks a:hover { color:var(--fg);background:var(--card); }
 
-  /* ===== HERO ===== */
-  header.hero { text-align:center; padding:64px 0 26px; }
-  .pill {
-    display:inline-flex; align-items:center; gap:8px;
-    font-family:var(--fd); font-size:8px; letter-spacing:1px;
-    color:var(--accent); border:1px solid rgba(34,197,94,.4);
-    background:rgba(34,197,94,.07); padding:8px 14px; margin-bottom:22px;
-  }
-  .pill b { width:6px; height:6px; background:var(--accent); animation:blink 1s steps(1) infinite; }
-  h1 {
-    font-family:var(--fd); font-size:clamp(20px,4.6vw,40px); line-height:1.35;
-    margin:0 0 18px; letter-spacing:1px;
-    text-shadow:4px 4px 0 #000;
-  }
-  h1 .hl { color:var(--accent); text-shadow:4px 4px 0 rgba(34,197,94,.25); }
-  h1 .hl2 { color:var(--gold); }
-  .sub { font-size:19px; color:var(--muted); max-width:640px; margin:0 auto 30px; font-family:'Microsoft JhengHei','PingFang TC',sans-serif; }
-  .sub code { color:var(--gold); }
-  .cta-row { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:46px; }
-  .btn {
-    font-family:var(--fd); font-size:10px; letter-spacing:1px; text-decoration:none;
-    padding:16px 22px; cursor:pointer; display:inline-flex; align-items:center; gap:10px;
-    border:2px solid #000; box-shadow:4px 4px 0 #000; transition:none;
-  }
-  .btn:hover { filter:brightness(1.12); transform:translate(-1px,-1px); box-shadow:5px 5px 0 #000; }
-  .btn:active { transform:translate(2px,2px); box-shadow:1px 1px 0 #000; }
-  .btn:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
-  .btn.primary { background:var(--primary); color:var(--on-primary); }
-  .btn.blue { background:var(--secondary); color:#FFF; }
-  .btn.small { font-size:8px; padding:10px 14px; }
+  /* ===== HERO（spritecook 式：大標題＋中央輸入框）===== */
+  header.hero { text-align:center;padding:72px 0 20px; }
+  .pill { display:inline-flex;align-items:center;gap:8px;font-family:var(--fd);font-size:8px;
+    letter-spacing:1px;color:var(--accent);border:1px solid rgba(34,197,94,.4);
+    background:rgba(34,197,94,.07);padding:8px 14px;margin-bottom:24px; }
+  .pill b { width:6px;height:6px;background:var(--accent);animation:blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  h1 { font-family:var(--fd);font-size:clamp(22px,5vw,44px);line-height:1.35;
+    margin:0 0 18px;letter-spacing:1px;text-shadow:4px 4px 0 #000; }
+  h1 .hl { color:var(--accent);text-shadow:4px 4px 0 rgba(34,197,94,.25); }
+  .sub { font-size:20px;color:var(--muted);max-width:640px;margin:0 auto 30px;
+    font-family:'Microsoft JhengHei','PingFang TC',sans-serif; }
+  .hero-input { display:flex;gap:10px;max-width:620px;margin:0 auto 14px; }
+  .hero-input input { flex:1;min-width:0;background:#0A101F;color:var(--fg);
+    border:2px solid var(--secondary);font-family:var(--fb);font-size:24px;
+    padding:14px 16px;caret-color:var(--accent);box-shadow:4px 4px 0 rgba(0,0,0,.55); }
+  .hero-input input::placeholder { color:#3D4C6B; }
+  .stats-strip { display:flex;justify-content:center;gap:26px;flex-wrap:wrap;
+    font-size:17px;color:var(--muted);margin:26px 0 8px;
+    font-family:'Microsoft JhengHei','PingFang TC',sans-serif; }
+  .stats-strip b { color:var(--gold);font-weight:normal; }
 
-  /* ===== SHOWREEL ===== */
-  .reel-wrap { position:relative; max-width:920px; margin:0 auto 52px; }
-  .reel {
-    position:relative; background:#0D1526; border:2px solid var(--border);
-    box-shadow:0 0 0 2px #000, 8px 8px 0 rgba(0,0,0,.55);
-    overflow:hidden;
-  }
-  .reel::before {
-    content:""; position:absolute; inset:0; pointer-events:none;
-    background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px);
-  }
-  .reel-stage {
-    display:flex; align-items:center; justify-content:center;
-    height:min(46vw,380px); min-height:240px;
-    background:
-      radial-gradient(ellipse 70% 60% at 50% 62%, rgba(37,99,235,.14), transparent 60%),
-      repeating-conic-gradient(#0F1830 0% 25%, #121C36 0% 50%) 0 0/26px 26px;
-  }
-  .reel-sprite {
-    --z:5; --logical:48; --frames:16;
-    --fw:calc(var(--logical) * var(--z) * 1px);
-    width:var(--fw); aspect-ratio:1/1; image-rendering:pixelated;
-    background-repeat:no-repeat;
-    background-size:calc(var(--frames) * var(--fw)) 100%;
-    animation:play var(--dur,1.28s) steps(var(--frames)) infinite;
-    transition:opacity .28s steps(4);
-  }
-  .reel-sprite.fade { opacity:0; }
-  @keyframes play { from{background-position-x:0} to{background-position-x:calc(-1*var(--frames)*var(--fw))} }
-  .reel-tag {
-    position:absolute; left:14px; top:12px; display:flex; flex-direction:column; gap:6px; text-align:left;
-  }
-  .reel-tag .fam {
-    font-family:var(--fd); font-size:10px; color:var(--on-accent);
-    background:var(--accent); padding:6px 10px; box-shadow:3px 3px 0 #000;
-  }
-  .reel-tag .nm { font-family:var(--fd); font-size:8px; color:var(--gold); text-shadow:2px 2px 0 #000; }
-  .reel-tag .ds { font-size:17px; color:var(--muted); max-width:300px; text-shadow:1px 1px 0 #000; font-family:'Microsoft JhengHei','PingFang TC',sans-serif; }
-  .reel-ctl { position:absolute; left:14px; bottom:12px; display:flex; gap:8px; z-index:5; }
-  .rbtn {
-    font-family:var(--fd); font-size:7px; letter-spacing:1px; padding:7px 9px; cursor:pointer;
-    background:rgba(11,19,34,.92); color:var(--fg); border:1px solid var(--border);
-    box-shadow:2px 2px 0 #000;
-  }
-  .rbtn:hover { border-color:var(--accent); }
-  .rbtn.on { background:var(--primary); color:#FFF; }
-  .rbtn:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
-  .dots { position:absolute; right:14px; bottom:12px; display:flex; gap:7px; }
-  .dots i { width:10px; height:10px; background:#22304F; border:1px solid #000; cursor:pointer; }
-  .dots i.on { background:var(--accent); }
-  .reel-frame { position:absolute; width:22px; height:22px; border:3px solid var(--border); pointer-events:none; }
-  .rf-tl{top:8px;left:8px;border-right:none;border-bottom:none}
-  .rf-tr{top:8px;right:8px;border-left:none;border-bottom:none}
-  .rf-bl{bottom:8px;left:8px;border-right:none;border-top:none}
-  .rf-br{bottom:8px;right:8px;border-left:none;border-top:none}
+  /* ===== 產品區塊（spritecook 式大卡）===== */
+  section.blk { padding:64px 0 10px;scroll-margin-top:76px; }
+  .blk-label { font-family:var(--fd);font-size:9px;color:var(--primary);letter-spacing:2px;display:block;margin-bottom:12px; }
+  .blk h2 { font-family:'Microsoft JhengHei','PingFang TC',sans-serif;font-weight:700;
+    font-size:clamp(22px,3.4vw,30px);margin:0 0 10px;text-shadow:3px 3px 0 #000; }
+  .blk .desc { font-size:19px;color:var(--muted);max-width:660px;margin:0 0 22px;line-height:1.55;
+    font-family:'Microsoft JhengHei','PingFang TC',sans-serif; }
+  .blk .cta-line { margin-bottom:26px; }
+  .alink { font-family:var(--fd);font-size:9px;color:var(--accent);text-decoration:none;
+    letter-spacing:1px;border-bottom:2px solid rgba(34,197,94,.35);padding-bottom:4px; }
+  .alink:hover { border-color:var(--accent); }
 
-  /* ===== SECTIONS ===== */
-  section { padding:60px 0 8px; scroll-margin-top:76px; }
-  #dex { margin-top:56px; }
-  .sec-head { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:8px; }
-  .sec-head .no { font-family:var(--fd); font-size:10px; color:var(--primary); }
-  h2.sec { margin:0; letter-spacing:1px; text-shadow:3px 3px 0 #000; }
-  h2.sec .en { font-family:var(--fd); font-size:13px; color:#FFF; }
-  h2.sec .zh { font-family:'Microsoft JhengHei','PingFang TC',sans-serif; font-weight:700; font-size:19px; color:#FFF; margin-left:8px; }
-  .sec-sub { color:var(--muted); font-size:18px; margin:8px 0 22px; font-family:'Microsoft JhengHei','PingFang TC',sans-serif; }
-
-  /* ===== SYNTH ===== */
-  .synth {
-    display:grid; grid-template-columns:minmax(300px,1fr) 340px; gap:22px;
+  /* ===== 01 CHARACTER CREATOR ===== */
+  .creator {
+    display:grid;grid-template-columns:minmax(300px,1fr) 360px;gap:22px;
     background:linear-gradient(180deg,var(--card),var(--card2));
-    border:2px solid var(--border); box-shadow:8px 8px 0 rgba(0,0,0,.5);
-    padding:22px;
-  }
-  @media (max-width:820px){ .synth { grid-template-columns:1fr; } }
-  .inputrow { display:flex; gap:10px; }
-  input[type=text] {
-    flex:1; min-width:0; background:#0A101F; color:var(--fg);
-    border:2px solid var(--secondary); font-family:var(--fb); font-size:23px;
-    padding:12px 14px; caret-color:var(--accent);
-  }
+    border:2px solid var(--border);box-shadow:8px 8px 0 rgba(0,0,0,.5);padding:22px; }
+  @media (max-width:820px){ .creator { grid-template-columns:1fr; } }
+  .inputrow { display:flex;gap:10px; }
+  input[type=text] { flex:1;min-width:0;background:#0A101F;color:var(--fg);
+    border:2px solid var(--secondary);font-family:var(--fb);font-size:22px;
+    padding:12px 14px;caret-color:var(--accent); }
   input[type=text]::placeholder { color:#3D4C6B; }
-  .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
-  .chip {
-    font-size:17px; color:var(--muted); cursor:pointer;
-    background:transparent; border:1px dashed #33456B; padding:4px 12px;
-    font-family:'Microsoft JhengHei','PingFang TC',sans-serif;
-  }
-  .chip:hover { color:var(--fg); border-color:var(--accent); border-style:solid; }
-  .dexinfo { margin-top:16px; border-top:2px dashed var(--border); padding-top:14px; }
-  .nm { font-family:var(--fd); font-size:15px; color:var(--gold); text-shadow:2px 2px 0 #000; display:block; margin-bottom:10px; }
-  .tag {
-    display:inline-block; font-family:var(--fd); font-size:8px; padding:5px 9px;
-    margin:0 8px 10px 0; background:var(--secondary); color:#FFF; box-shadow:2px 2px 0 #000;
-  }
-  .tag.green { background:var(--accent); color:var(--on-accent); }
-  .lore { color:var(--muted); display:block; min-height:40px; font-size:17px; line-height:1.5; font-family:'Microsoft JhengHei','PingFang TC',sans-serif; }
-  .stats { display:grid; grid-template-columns:auto 1fr auto; gap:6px 12px; align-items:center; font-size:19px; margin-top:10px; max-width:420px; }
-  .stats b { color:var(--muted); font-weight:normal; font-family:var(--fd); font-size:8px; }
-  .bar { height:14px; background:#0A101F; border:1px solid var(--border); position:relative; }
-  .bar i { position:absolute; inset:0; right:auto; width:0; background:linear-gradient(90deg,var(--secondary),var(--accent)); transition:width .35s steps(8); }
-  .stats em { font-style:normal; color:var(--accent); font-variant-numeric:tabular-nums; }
-  .viewer { display:flex; flex-direction:column; }
-  .canvas-box {
-    position:relative; flex:1; min-height:300px; padding:14px; background:#0A101F;
-    border:2px solid var(--border); box-shadow:inset 0 0 30px rgba(0,0,0,.7);
-    display:flex; align-items:center; justify-content:center;
-  }
-  .canvas-box::after {
-    content:"PREVIEW 48×48"; position:absolute; left:12px; bottom:6px;
-    font-family:var(--fd); font-size:12px; color:var(--muted);
-    letter-spacing:1px; text-shadow:2px 2px 0 #000;
-  }
-  .pvctl { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; align-items:center; }
-  .pvctl .lbl { font-family:var(--fd); font-size:8px; color:var(--muted); letter-spacing:1px; margin-right:2px; }
-  #dexView {
-    display:block; width:min(320px,100%); height:auto; aspect-ratio:1/1; image-rendering:pixelated;
-    background:repeating-conic-gradient(#10192B 0% 25%, #16223A 0% 50%) 0 0/24px 24px;
-  }
+  .chips { display:flex;flex-wrap:wrap;gap:8px;margin-top:12px; }
+  .chip { font-size:17px;color:var(--muted);cursor:pointer;background:transparent;
+    border:1px dashed #33456B;padding:4px 12px;font-family:'Microsoft JhengHei','PingFang TC',sans-serif; }
+  .chip:hover { color:var(--fg);border-color:var(--accent);border-style:solid; }
+  .chip.on { color:var(--on-accent);background:var(--accent);border:1px solid var(--accent); }
+  .dexinfo { margin-top:16px;border-top:2px dashed var(--border);padding-top:14px; }
+  .nm { font-family:var(--fd);font-size:15px;color:var(--gold);text-shadow:2px 2px 0 #000;
+    display:block;margin-bottom:10px; }
+  .tag { display:inline-block;font-family:var(--fd);font-size:8px;padding:5px 9px;margin:0 8px 10px 0;
+    background:var(--secondary);color:#FFF;box-shadow:2px 2px 0 #000; }
+  .tag.green { background:var(--accent);color:var(--on-accent); }
+  .lore { color:var(--muted);display:block;min-height:40px;font-size:17px;line-height:1.5;
+    font-family:'Microsoft JhengHei','PingFang TC',sans-serif; }
+  .stats { display:grid;grid-template-columns:auto 1fr auto;gap:6px 12px;align-items:center;
+    font-size:19px;margin-top:10px;max-width:420px; }
+  .stats b { color:var(--muted);font-weight:normal;font-family:var(--fd);font-size:8px; }
+  .bar { height:14px;background:#0A101F;border:1px solid var(--border);position:relative; }
+  .bar i { position:absolute;inset:0;right:auto;width:0;
+    background:linear-gradient(90deg,var(--secondary),var(--accent));transition:width .35s steps(8); }
+  .stats em { font-style:normal;color:var(--accent);font-variant-numeric:tabular-nums; }
+  .viewer { display:flex;flex-direction:column; }
+  .canvas-box { position:relative;flex:1;min-height:300px;padding:14px;background:#0A101F;
+    border:2px solid var(--border);box-shadow:inset 0 0 30px rgba(0,0,0,.7);
+    display:flex;align-items:center;justify-content:center; }
+  .canvas-box::after { content:"PREVIEW 48×48";position:absolute;left:12px;bottom:6px;
+    font-family:var(--fd);font-size:12px;color:var(--muted);letter-spacing:1px;text-shadow:2px 2px 0 #000; }
+  .filechip { font-family:var(--fd);font-size:7px;color:var(--muted);letter-spacing:1px;
+    margin-top:8px;text-align:right; }
+  #dexView { display:block;width:min(320px,100%);height:auto;aspect-ratio:1/1;image-rendering:pixelated;
+    background:repeating-conic-gradient(#10192B 0% 25%,#16223A 0% 50%) 0 0/24px 24px; }
+  .pvctl { display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center; }
+  .pvctl .lbl { font-family:var(--fd);font-size:8px;color:var(--muted);letter-spacing:1px;margin-right:2px; }
+  .rbtn { font-family:var(--fd);font-size:7px;letter-spacing:1px;padding:7px 9px;cursor:pointer;
+    background:rgba(11,19,34,.92);color:var(--fg);border:1px solid var(--border);box-shadow:2px 2px 0 #000; }
+  .rbtn:hover { border-color:var(--accent); }
+  .rbtn.on { background:var(--primary);color:#FFF; }
+  .rbtn.gold { border-color:rgba(255,210,74,.5); }
+  .rbtn:focus-visible { outline:3px solid var(--accent);outline-offset:2px; }
 
-  /* ===== DEX LOG ===== */
-  .dexpanel {
+  /* ===== 02 STYLE SETS ===== */
+  .stylegrid { display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px; }
+  .stylecard { background:linear-gradient(180deg,var(--card),var(--card2));border:2px solid var(--border);
+    box-shadow:6px 6px 0 rgba(0,0,0,.5);padding:16px;text-align:center;cursor:pointer;position:relative; }
+  .stylecard:hover { border-color:var(--accent); }
+  .stylecard.on { border-color:var(--accent);box-shadow:6px 6px 0 rgba(34,197,94,.25); }
+  .stylecard.on::before { content:"▸ ON";position:absolute;top:8px;right:10px;
+    font-family:var(--fd);font-size:7px;color:var(--accent);letter-spacing:1px; }
+  .stylecard canvas { width:120px;height:120px;image-rendering:pixelated;display:block;margin:0 auto 10px;
+    background:repeating-conic-gradient(#10192B 0% 25%,#16223A 0% 50%) 0 0/20px 20px; }
+  .stylecard .snm { font-family:var(--fd);font-size:8px;letter-spacing:1px;color:var(--fg);display:block; }
+  .stylecard .szh { font-size:16px;color:var(--muted);
+    font-family:'Microsoft JhengHei','PingFang TC',sans-serif; }
+
+  /* ===== 03 IMAGE GENERATOR（貼圖）===== */
+  .texgen { display:grid;grid-template-columns:minmax(280px,1fr) auto auto;gap:22px;align-items:start;
     background:linear-gradient(180deg,var(--card),var(--card2));
-    border:2px solid var(--border); box-shadow:8px 8px 0 rgba(0,0,0,.5);
-    padding:22px;
-  }
-  .dexgrid { display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); }
-  .dexitem { text-align:center; background:var(--card); border:1px solid var(--border); padding:10px 6px; }
-  .dexitem:hover { border-color:var(--accent); }
-  .dexitem canvas { width:72px; height:72px; image-rendering:pixelated; display:block; margin:0 auto 8px; }
-  .dexitem span { font-family:var(--fd); font-size:7px; color:var(--muted); word-break:break-all; display:block; line-height:1.6; }
-  .hint { color:var(--muted); font-family:'Microsoft JhengHei','PingFang TC',sans-serif; }
+    border:2px solid var(--border);box-shadow:8px 8px 0 rgba(0,0,0,.5);padding:22px; }
+  @media (max-width:820px){ .texgen { grid-template-columns:1fr; } }
+  .texbox { background:#0A101F;border:2px solid var(--border);padding:12px; }
+  .texbox .cap { font-family:var(--fd);font-size:7px;color:var(--muted);letter-spacing:1px;
+    display:block;margin-top:8px;text-align:center; }
+  #texView,#texTiled { display:block;image-rendering:pixelated;background:#0A101F; }
+  #texView { width:200px;height:200px; }
+  #texTiled { width:200px;height:200px; }
 
-  /* sprite sheets */
-  .sp-slime   {--logical:32;background-image:url("slime_sheet@8x.png")}
-  .sp-walker  {background-image:url("walker_sheet@8x.png")}
-  .sp-dog     {background-image:url("dog_sheet@8x.png")}
-  .sp-bird    {background-image:url("bird_sheet@8x.png")}
-  .sp-fish    {background-image:url("fish_sheet@8x.png")}
-  .sp-bug     {background-image:url("bug_sheet@8x.png")}
-  .sp-serpent {background-image:url("serpent_sheet@8x.png")}
-  .sp-ghost   {background-image:url("ghost_sheet@8x.png")}
-  .sp-robot   {background-image:url("robot_sheet@8x.png")}
-  .sp-knight  {background-image:url("knight_sheet@8x.png")}
-  .xr-walker{background-image:url("walker_rig@8x.png")}
-  .xr-dog{background-image:url("dog_rig@8x.png")}
-  .xr-bird{background-image:url("bird_rig@8x.png")}
-  .xr-fish{background-image:url("fish_rig@8x.png")}
-  .xr-bug{background-image:url("bug_rig@8x.png")}
-  .xr-serpent{background-image:url("serpent_rig@8x.png")}
-  .xr-ghost{background-image:url("ghost_rig@8x.png")}
-  .xr-robot{background-image:url("robot_rig@8x.png")}
-  .xr-knight{background-image:url("knight_rig@8x.png")}
+  /* ===== 04 LIBRARY ===== */
+  .libtabs { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px; }
+  .libgrid { display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); }
+  .libitem { text-align:center;background:var(--card);border:1px solid var(--border);
+    padding:10px 6px;cursor:pointer; }
+  .libitem:hover { border-color:var(--accent); }
+  .libitem canvas { width:72px;height:72px;image-rendering:pixelated;display:block;margin:0 auto 8px;
+    background:repeating-conic-gradient(#10192B 0% 25%,#16223A 0% 50%) 0 0/18px 18px; }
+  .libitem span { font-family:var(--fd);font-size:7px;color:var(--muted);word-break:break-all;
+    display:block;line-height:1.6; }
+  .libitem em { font-style:normal;font-size:13px;color:var(--gold);display:block;
+    font-family:'Microsoft JhengHei',sans-serif;margin-top:2px; }
+
+  /* ===== AUDIENCE 三卡 ===== */
+  .audgrid { display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px; }
+  .audcard { background:linear-gradient(180deg,var(--card),var(--card2));border:2px solid var(--border);
+    box-shadow:6px 6px 0 rgba(0,0,0,.5);padding:20px; }
+  .audcard h3 { font-family:var(--fd);font-size:9px;letter-spacing:1px;margin:0 0 10px;color:var(--gold); }
+  .audcard ul { margin:0;padding-left:18px;color:var(--muted);font-size:17px;line-height:1.7;
+    font-family:'Microsoft JhengHei','PingFang TC',sans-serif; }
 
   code { color:var(--gold); }
-  footer {
-    margin-top:70px; border-top:1px solid var(--border); padding:30px 0 44px;
-    text-align:center; color:var(--muted); font-size:19px;
-  }
-  footer .fl { font-family:var(--fd); font-size:9px; color:var(--fg); letter-spacing:1px; display:block; margin-bottom:12px; }
-
-  @media (prefers-reduced-motion: reduce) {
-    .reel-sprite { animation-duration:3s; }
-    .pill b,h1 .cursor { animation:none; }
-    .crt { display:none; }
-    html { scroll-behavior:auto; }
-  }
-  /* —— 手機可讀性：放喺最尾確保覆蓋所有 base rules —— */
+  footer { margin-top:70px;border-top:1px solid var(--border);padding:30px 0 44px;
+    text-align:center;color:var(--muted);font-size:19px; }
+  footer .fl { font-family:var(--fd);font-size:9px;color:var(--fg);letter-spacing:1px;
+    display:block;margin-bottom:12px; }
+  @media (prefers-reduced-motion: reduce){ .crt{display:none;} html{scroll-behavior:auto;} }
+  /* —— 手機可讀性 —— */
   @media (max-width:640px){
-    .reel-tag .ds { display:none; }
-    .reel-sprite { --z:3.2; }
-    .navlinks a { font-size:9px; padding:10px 8px; }
+    .navlinks a { font-size:9px;padding:10px 8px; }
     .logo { font-size:10px; }
     .pill { font-size:9px; }
     .sub { font-size:17px; }
-    .btn { font-size:11px; padding:14px 18px; }
-    .btn.small { font-size:9px; padding:12px 16px; }
-    .rbtn { font-size:8px; padding:9px 10px; }
-    .dots i { width:13px; height:13px; }
-    .reel-tag .fam,.reel-tag .nm { font-size:9px; }
-    .sec-sub { font-size:16px; }
-    .chip { font-size:16px; padding:6px 14px; }
+    .hero-input input { font-size:18px;padding:12px; }
+    .chip { font-size:16px;padding:6px 14px; }
     input[type=text] { font-size:18px; }
     .nm { font-size:13px; }
-    .tag { font-size:9px; }
     .lore { font-size:16px; }
     .stats { font-size:18px; }
     .stats b { font-size:9px; }
-    .dexitem canvas { width:84px; height:84px; }
-    .dexitem span { font-size:10px; }
-    .canvas-box::after { font-size:13px; bottom:8px; left:12px; }
+    .canvas-box::after { font-size:13px;bottom:8px; }
     .pvctl { gap:7px; }
-    .pvctl .rbtn { font-size:10px; padding:10px 12px; }
+    .pvctl .rbtn { font-size:9px;padding:9px 10px; }
     .pvctl .lbl { display:none; }
     #dexView { width:min(210px,60vw); }
+    #texView,#texTiled { width:min(200px,70vw);height:auto;aspect-ratio:1/1; }
+    .stylecard canvas { width:100px;height:100px; }
     footer { font-size:17px; }
   }
 </style>
@@ -301,50 +219,37 @@
   <div class="wrap navin">
     <a class="logo" href="#top"><i></i>PIXEL SPECIES LAB</a>
     <div class="navlinks">
-      <a href="#synth">SYNTHESIZER</a>
-      <a href="#dex">DEX</a>
+      <a href="#creator">CREATOR</a>
+      <a href="#styles">STYLES</a>
+      <a href="#tex">TEXTURES</a>
+      <a href="#library">LIBRARY</a>
     </div>
   </div>
 </nav>
+
 <main id="top">
 
 <!-- ===== HERO ===== -->
 <header class="hero wrap">
-  <span class="pill"><b></b>TEXT → CREATURE · 即時生成</span>
-  <h1>輸入文字<br>生成<span class="hl">你嘅像素物種</span></h1>
-  <p class="sub">打任何字 — 個名、一個諗法、一句咒語 — 合成器即時將佢變成一隻獨一無二嘅 Pixel Art 生物，附圖鑑資料。同一串字永遠生出同一隻。</p>
-  <div class="cta-row">
-    <a class="btn primary" href="#synth">▶ 開始生成</a>
-    <a class="btn blue" href="#gallery">睇示範</a>
+  <span class="pill"><b></b>TEXT → GAME CHARACTER · 即時生成</span>
+  <h1>打一句字<br>生成<span class="hl">成隻遊戲角色</span></h1>
+  <p class="sub">描述佢 — 個名、一個諗法、一句咒語 — 即刻變成一隻有六種動作嘅 Pixel Art 生物，每個動作獨立 sprite sheet 下載，直接掉入你嘅遊戲引擎。</p>
+  <div class="hero-input">
+    <input id="heroInput" type="text" maxlength="40" placeholder="例如：火龍 / cyber cat / lava knight…" aria-label="物種種子文字">
+    <button class="btn primary" id="heroBtn">CREATE ▸</button>
+  </div>
+  <div class="stats-strip">
+    <span><b>∞</b> 物種組合</span><span><b>6</b> 種動作</span><span><b>4</b> 套風格</span><span><b>$0</b> 月費</span><span><b>0</b> 排隊時間</span>
   </div>
 </header>
 
-<!-- ===== SHOWREEL：八大物種自動輪播 ===== -->
-<div class="wrap">
-  <div class="reel-wrap">
-    <div class="reel" id="reel" aria-label="八大身體藍圖物種輪播">
-      <span class="reel-frame rf-tl"></span><span class="reel-frame rf-tr"></span>
-      <span class="reel-frame rf-bl"></span><span class="reel-frame rf-br"></span>
-      <div class="reel-stage"><div class="reel-sprite sp-slime" id="reelSprite"></div></div>
-      <div class="reel-tag">
-        <span class="fam" id="reelFam">黏體族 · AMORPHOUS</span>
-        <span class="nm" id="reelNm">SLIME HOP</span>
-        <span class="ds" id="reelDs">最經典嘅入門生物 — 一壓一彈，永遠唔會死。</span>
-      </div>
-      <div class="reel-ctl">
-        <button class="rbtn" id="xrayBtn" aria-label="切換骨骼 X-Ray 檢視">X-RAY 🦴</button>
-        <button class="rbtn" id="pauseBtn" aria-label="暫停或繼續輪播動畫">⏸ PAUSE</button>
-      </div>
-      <div class="dots" id="reelDots"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ===== SYNTH ===== -->
-<section id="synth" class="wrap">
-  <div class="sec-head"><span class="no">01</span><h2 class="sec"><span class="en">SPEC SYNTHESIZER_</span><span class="zh">物種合成器</span></h2></div>
-  <p class="sec-sub">任何文字即刻變成一隻像素物種 — 全程喺你部機運算。</p>
-  <div class="synth">
+<!-- ===== 01 CHARACTER CREATOR ===== -->
+<section id="creator" class="blk wrap">
+  <span class="blk-label">CHARACTER CREATOR</span>
+  <h2>一句 prompt，成隻角色連晒所有動作</h2>
+  <p class="desc">任何你描述到嘅動作，永遠係同一隻角色。行、跑、跳、攻擊全部一撳即換，每個動作獨立一條 sprite sheet。</p>
+  <div class="cta-line"><a class="alink" href="#library">睇下其他人生成咗 →</a></div>
+  <div class="creator">
     <div>
       <div class="inputrow">
         <input id="seedInput" type="text" maxlength="40" placeholder="輸入文字，例如：火龍 / cyber cat…" aria-label="物種種子文字">
@@ -368,326 +273,269 @@
           <b>SPD</b><div class="bar"><i id="barSPD"></i></div><em id="vSPD">--</em>
         </div>
         <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
-          <button class="btn blue small" id="saveBtn">⬇ SAVE PNG</button>
+          <button class="btn blue small" id="saveBtn">⬇ FRAME PNG</button>
+          <button class="btn small" style="background:#3B2F14;color:var(--gold)" id="sheetBtn">⬇ SHEET PNG</button>
           <button class="btn small" style="background:#3B2F14;color:var(--gold)" id="randBtn">🎲 RANDOM</button>
         </div>
       </div>
     </div>
     <div class="viewer">
       <div class="canvas-box"><canvas id="dexView" width="48" height="48" aria-label="物種預覽"></canvas></div>
+      <div class="filechip" id="gfileChip">—</div>
       <div class="pvctl">
         <span class="lbl">ACT_</span>
-        <button class="rbtn on" data-act="walk" aria-pressed="true">行 WALK</button>
+        <button class="rbtn on" data-act="idle" aria-pressed="true">待機 IDLE</button>
+        <button class="rbtn" data-act="walk">行 WALK</button>
         <button class="rbtn" data-act="run">跑 RUN</button>
         <button class="rbtn" data-act="jump">跳 JUMP</button>
+        <button class="rbtn" data-act="attack">擊 ATTACK</button>
         <button class="rbtn" data-act="rest">息 REST</button>
         <button class="rbtn" id="pvXrayBtn" aria-label="切換預覽骨骼 X-Ray 檢視">X-RAY 🦴</button>
       </div>
     </div>
   </div>
-
 </section>
 
-<!-- ===== DEX LOG ===== -->
-<section id="dex" class="wrap">
-  <div class="sec-head"><span class="no">02</span><h2 class="sec"><span class="en">DEX LOG_</span><span class="zh">發現紀錄</span></h2></div>
-  <p class="sec-sub">最近發現嘅 12 隻（刷新會清空）。</p>
-  <div class="dexpanel">
-    <div class="dexgrid" id="dexGrid"><p class="hint">仲未發現任何物種 — 上面打啲字啦！</p></div>
+<!-- ===== 02 STYLE SETS ===== -->
+<section id="styles" class="blk wrap">
+  <span class="blk-label">STYLE SETS</span>
+  <h2>同一隻角色，成套風格一致</h2>
+  <p class="desc">揀一套風格，預覽、例庫、下載嘅每一帧都會即時套用 — 好似同一個畫師畫晒成個 pack。</p>
+  <div class="cta-line"><a class="alink" href="#tex">仲有無縫貼圖 →</a></div>
+  <div class="stylegrid" id="styleGrid"></div>
+</section>
+
+<!-- ===== 03 IMAGE GENERATOR ===== -->
+<section id="tex" class="blk wrap">
+  <span class="blk-label">IMAGE GENERATOR</span>
+  <h2>無縫貼圖，即刻掉入引擎</h2>
+  <p class="desc">四種程序化 tileable 貼圖 — 草地、磚牆、水面、泥地。64×64 真像素格，無縫接駁，Unity／Godot／Tiled 直接用。</p>
+  <div class="texgen">
+    <div>
+      <div class="chips" style="margin-top:0" aria-label="貼圖種類">
+        <button class="chip on" data-tex="grass">草地 GRASS</button>
+        <button class="chip" data-tex="brick">磚牆 BRICK</button>
+        <button class="chip" data-tex="water">水面 WATER</button>
+        <button class="chip" data-tex="dirt">泥地 DIRT</button>
+      </div>
+      <p class="desc" style="margin:16px 0 0;font-size:17px">同一粒 seed 永遠生出同一塊磚。右邊 2×2 平鋪示範證明無縫。</p>
+      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+        <button class="btn blue small" id="tileSaveBtn">⬇ TILESET PNG</button>
+      </div>
+    </div>
+    <div class="texbox">
+      <canvas id="texView" width="64" height="64"></canvas>
+      <span class="cap" id="texCap">GRASS · 64×64 TILE</span>
+    </div>
+    <div class="texbox">
+      <canvas id="texTiled" width="128" height="128"></canvas>
+      <span class="cap">2×2 SEAMLESS PROOF</span>
+    </div>
   </div>
 </section>
+
+<!-- ===== 04 LIBRARY ===== -->
+<section id="library" class="blk wrap">
+  <span class="blk-label">LIBRARY</span>
+  <h2>例庫 — 撳任何一隻即刻載入</h2>
+  <p class="desc">全部由同一個引擎即場生成。搵到心水？撳佢就會載入上面嘅創作器。</p>
+  <div class="libtabs" id="libTabs"></div>
+  <div class="libgrid" id="libGrid"></div>
+</section>
+
+<!-- ===== AUDIENCE ===== -->
+<section class="blk wrap">
+  <span class="blk-label">WHO IT'S FOR</span>
+  <h2>邊個喺用？</h2>
+  <div class="audgrid">
+    <div class="audcard"><h3>SOLO INDIE DEVS</h3><ul><li>主角、道具、敵人</li><li>唔使請畫師</li><li>RPG / roguelike 全套現役素材</li></ul></div>
+    <div class="audcard"><h3>JAM TEAMS</h3><ul><li>幾個鐘砌好成套美術</li><li>限時前交到貨</li><li>風格一致性自動搞掂</li></ul></div>
+    <div class="audcard"><h3>PROTOTYPE BUILDERS</h3><ul><li>機制測試有真畫面</li><li>Pitch deck 有嘢俾人睇</li><li>零成本任意試</li></ul></div>
+  </div>
+</section>
+
 </main>
 
 <footer>
   <span class="fl">PIXEL SPECIES LAB_</span>
   純本地運算 · 冇 server 冇 API · 八大藍圖無限物種<br>
-  made with python3 + pillow + vanilla js · deployed on github pages
+  made with vanilla js · deployed on github pages
 </footer>
-
 <script>
-/* ============ 1. SHOWREEL：八大物種輪播（X-RAY / PAUSE 內置） ============ */
-const REEL = [
-  {css:"sp-slime",   rig:false, fam:"黏體族 · AMORPHOUS", nm:"SLIME HOP",      dur:1.28},
-  {css:"sp-walker",  rig:true,  fam:"人形族 · BIPEDAL",   nm:"SKELETON WALKER",dur:1.28},
-  {css:"sp-dog",     rig:true,  fam:"獸形族 · QUADRUPED", nm:"DOG TROT",       dur:1.28},
-  {css:"sp-bird",    rig:true,  fam:"鳥形族 · AVIAN",     nm:"BIRD FLAP",      dur:0.96},
-  {css:"sp-fish",    rig:true,  fam:"水棲族 · AQUATIC",   nm:"FISH SWIM",      dur:1.12},
-  {css:"sp-bug",     rig:true,  fam:"蟲形族 · INSECTOID", nm:"BUG WALK",       dur:1.28},
-  {css:"sp-serpent", rig:true,  fam:"蛇形族 · SERPENTINE",nm:"SERPENT SLITHER",dur:1.44},
-  {css:"sp-ghost",   rig:true,  fam:"浮遊族 · FLOATING",  nm:"GHOST FLOAT",    dur:1.6}
-];
-const reelSprite = document.getElementById("reelSprite");
-const dotsBox = document.getElementById("reelDots");
-const xrayBtn = document.getElementById("xrayBtn");
-const pauseBtn = document.getElementById("pauseBtn");
-const AUTO_MS = matchMedia("(prefers-reduced-motion: reduce)").matches ? 8000 : 4200;
-let reelIdx = 0, reelTimer = null, xrayOn = false, paused = false;
-REEL.forEach((r,i) => {
-  const d = document.createElement("i");
-  d.onclick = () => showReel(i);
-  dotsBox.appendChild(d);
-});
-function startAuto(){
-  if(reelTimer) clearInterval(reelTimer);
-  if(!paused) reelTimer = setInterval(()=>showReel(reelIdx+1), AUTO_MS);
-}
-function applyXray(){
-  const r = REEL[reelIdx];
-  if(!r.rig){ xrayBtn.style.display = "none"; return; }
-  xrayBtn.style.display = "";
-  reelSprite.classList.toggle(r.css, !xrayOn);
-  reelSprite.classList.toggle(r.css.replace("sp-","xr-"), xrayOn);
-  xrayBtn.classList.toggle("on", xrayOn);
-  xrayBtn.textContent = xrayOn ? "SKIN ✦" : "X-RAY 🦴";
-}
-function showReel(i){
-  reelIdx = i % REEL.length;
-  const r = REEL[reelIdx];
-  xrayOn = false;
-  reelSprite.classList.add("fade");
-  setTimeout(() => {
-    reelSprite.className = "reel-sprite fade " + r.css;
-    reelSprite.style.setProperty("--dur", r.dur + "s");
-    if(paused) reelSprite.style.animationPlayState = "paused";
-    document.getElementById("reelFam").textContent = r.fam;
-    document.getElementById("reelNm").textContent  = r.nm;
-    void reelSprite.offsetWidth;
-    reelSprite.classList.remove("fade");
-    applyXray();
-  }, 240);
-  [...dotsBox.children].forEach((d,k)=>d.classList.toggle("on", k===reelIdx));
-  startAuto();
-}
-xrayBtn.onclick = () => { xrayOn = !xrayOn; applyXray(); };
-pauseBtn.onclick = () => {
-  paused = !paused;
-  reelSprite.style.animationPlayState = paused ? "paused" : "running";
-  pauseBtn.classList.toggle("on", paused);
-  pauseBtn.textContent = paused ? "▶ PLAY" : "⏸ PAUSE";
-  startAuto();
-};
-showReel(0);
-
-/* ============ 2. 合成器 ============ */
-function fnv1a(str){
-  let h = 2166136261 >>> 0;
-  for (let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h,16777619); }
-  return h >>> 0;
-}
-function mulberry32(a){
-  return function(){
-    a |= 0; a = a + 0x6D2B79F5 | 0;
-    let t = Math.imul(a ^ a>>>15, 1 | a);
-    t = t + Math.imul(t ^ t>>>7, 61 | t) ^ t;
-    return ((t ^ t>>>14) >>> 0) / 4294967296;
-  };
-}
-const FAMILIES = [
+/* ============ 核心：雜湊 + PRNG ============ */
+function fnv1a(str){ let h=2166136261>>>0; for(let i=0;i<str.length;i++){ h^=str.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function mulberry32a(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const FAMILIES=[
   {key:"bipedal",zh:"兩足獸"},{key:"quadruped",zh:"四足獸"},{key:"serpentine",zh:"蛇形族"},
   {key:"avian",zh:"鳥形族"},{key:"aquatic",zh:"水棲族"},{key:"insectoid",zh:"蟲形族"},
-  {key:"amorphous",zh:"黏體族"},{key:"floating",zh:"浮遊族"}
-];
-const PRE = ["咕嚕","波波","電電","熔岩","霜霜","影影","星塵","泡泡","菇菇","雷雷","Cyber","Neo","Pixel","Glitch","Astro","Mecha"];
-const SUF = ["獸","精靈","蟲","龍","史萊姆","俠","喵","犬","魚","Bot","mon","ling"];
-const PLACES = ["深海溝","廢棄街機","數據垃圾崗","雲上浮島","地鐵隧道","像素森林","舊伺服器房","霓虹後巷"];
-const FOODS  = ["電路板","晨早露珠","舊硬碟","月光","二進位麵包","閃卡","Wi-Fi 訊號","過期電池"];
-const HABITS = ["日瞓夜出","成日唱歌","周圍搵嘢食","鍾意模仿人類","極度怕凍","一緊張就會變色"];
+  {key:"amorphous",zh:"黏體族"},{key:"floating",zh:"浮遊族"}];
+const PRE=["咕嚕","波波","電電","熔岩","霜霜","影影","星塵","泡泡","菇菇","雷雷","Cyber","Neo","Pixel","Glitch","Astro","Mecha"];
+const SUF=["獸","精靈","蟲","龍","史萊姆","俠","喵","犬","魚","Bot","mon","ling"];
+const PLACES=["深海溝","廢棄街機","數據垃圾崗","雲上浮島","地鐵隧道","像素森林","舊伺服器房","霓虹後巷"];
+const FOODS=["電路板","晨早露珠","舊硬碟","月光","二進位麵包","閃卡","Wi-Fi 訊號","過期電池"];
+const HABITS=["日瞓夜出","成日唱歌","周圍搵嘢食","鍾意模仿人類","極度怕凍","一緊張就會變色"];
 function pick(rnd,arr){ return arr[Math.floor(rnd()*arr.length)]; }
 function makeLore(rnd){ return "棲息於"+pick(rnd,PLACES)+"，主食"+pick(rnd,FOODS)+"，性格係「"+pick(rnd,HABITS)+"」。"; }
 function makeName(rnd){ return pick(rnd,PRE)+pick(rnd,SUF); }
 
-let P; // palette
-const view = document.getElementById("dexView");
-const vctx = view.getContext("2d");
+/* ============ 風格系統（STYLE SETS）============ */
+const STYLES=[
+  {id:"neon",  nm:"NEON",    zh:"霓虹", fn:null},
+  {id:"dark",  nm:"DARK",    zh:"暗黑", fn:(r,g,b)=>[r*.5+8,g*.45+8,b*.72+18]},
+  {id:"pastel",nm:"PASTEL",  zh:"粉彩", fn:(r,g,b)=>[r*.62+95,g*.62+95,b*.62+95]},
+  {id:"gb",    nm:"GAME BOY",zh:"復古", fn:null}
+];
+const GB_PAL=[[15,56,15],[48,98,48],[139,172,15],[155,188,15]];
+let curStyle=0;
+function applyStyle(cv){
+  const st=STYLES[curStyle]; if(!st.fn && st.id!=="gb") return;
+  const cx=cv.getContext("2d"), im=cx.getImageData(0,0,cv.width,cv.height), d=im.data;
+  for(let i=0;i<d.length;i+=4){
+    if(d[i+3]===0) continue;
+    if(st.id==="gb"){
+      const lum=d[i]*.299+d[i+1]*.587+d[i+2]*.114;
+      const p=GB_PAL[lum<52?0:lum<104?1:lum<160?2:3];
+      d[i]=p[0]; d[i+1]=p[1]; d[i+2]=p[2];
+    } else {
+      const c=st.fn(d[i],d[i+1],d[i+2]); d[i]=c[0]; d[i+1]=c[1]; d[i+2]=c[2];
+    }
+  }
+  cx.putImageData(im,0,0);
+}
+
+/* ============ 角色繪製引擎（八族 × 六動作）============ */
+let P;
 function makePalette(rnd){
-  const hue = Math.floor(rnd()*360), sat = 55+Math.floor(rnd()*35), shift = Math.floor(rnd()*30)-15;
-  return {
-    main :"hsl("+hue+","+sat+"%,55%)",
-    deep :"hsl("+(hue+shift)+","+sat+"%,38%)",
-    pale :"hsl("+(hue+shift)+","+sat+"%,72%)",
-    belly:"hsl("+((hue+180)%360)+","+Math.max(sat-20,20)+"%,85%)",
-    eye:"#FFFFFF", pupil:"#0F172A"
-  };
+  const hue=Math.floor(rnd()*360), sat=55+Math.floor(rnd()*35), shift=Math.floor(rnd()*30)-15;
+  return { main:"hsl("+hue+","+sat+"%,55%)", deep:"hsl("+(hue+shift)+","+sat+"%,38%)",
+    pale:"hsl("+(hue+shift)+","+sat+"%,72%)",
+    belly:"hsl("+((hue+180)%360)+","+Math.max(sat-20,20)+"%,85%)", eye:"#FFFFFF", pupil:"#0F172A" };
 }
 let C;
-function sym(x,y,w,h,col){ C.fillStyle=col; C.fillRect(x,y,w,h); C.fillRect(48-x-w,y,w,h); }
-function solo(x,y,w,h,col){ C.fillStyle=col; C.fillRect(x,y,w,h); }
+function solo(x,y,w,h,col){ C.fillStyle=col; C.fillRect(Math.round(x),Math.round(y),w,h); }
+function sym(x,y,w,h,col){ C.fillStyle=col; C.fillRect(Math.round(x),y,w,h); C.fillRect(Math.round(48-x-w),y,w,h); }
 function eyes(x1,x2,y,rnd,big){
-  const w = big?3:2;
+  if(drawCreature._blink) return;
+  const w=big?3:2;
   solo(x1,y,w,w,P.eye); solo(x2,y,w,w,P.eye);
   solo(x1+(big?1:0)+(rnd()<0.5?0:1),y+1,1,1,P.pupil);
   solo(x2+(big?1:0)+(rnd()<0.5?0:1),y+1,1,1,P.pupil);
 }
+function slash(){ /* 攻擊斬擊特效：白金色斜線 */ 
+  solo(30,10,2,10,"#FFF7CC"); solo(32,12,2,10,"#FFD24A"); solo(28,8,2,6,"#FFFFFF");
+}
 function drawCreature(fam,f,N,rnd,act){
-  act=act||"walk";
+  act=act||"idle";
   const ph=f%2, t=f/N;
-  let bob=0, br=ph, gY=44;
-  if(act==="walk"){ bob=f<N/2?-1:0; }
+  drawCreature._blink=false;
+  let bob=0, br=ph, gY=44, lunge=0;
+  if(act==="idle"){ bob=[0,-1,-1,0][f%4]; drawCreature._blink=(f===N-1); }
+  else if(act==="walk"){ bob=f<N/2?-1:0; }
   else if(act==="run"){ bob=-Math.round(Math.abs(Math.sin(t*Math.PI*2))*3); }
   else if(act==="jump"){ bob=-Math.round(Math.sin(Math.PI*t)*7); }
+  else if(act==="attack"){ lunge=[-1,-1,0,2,2,0][f%6]; bob=(f>=3&&f<=4)?-1:0; }
   else { bob=(f%4<1)?-1:0; }
-  const AIR=act==="jump"&&bob<=-3, RUN=act==="run", REST=act==="rest";
+  const AIR=act==="jump"&&bob<=-3, RUN=act==="run", REST=act==="rest", ATK=act==="attack";
   switch(fam){
-    case "bipedal": {
-      const bw=12+br*2,bh=14-br*2,bx=24-bw/2,by=gY-bh-8+bob;
-      sym(bx,by,bw/2,bh,P.main); solo(22,by+3,4,bh-6,P.belly);
-      const hy=by-9+bob;
-      sym(17,hy,7,8,P.pale); eyes(20,26,hy+3,rnd,true);
-      const ll=AIR?4:6, l1=RUN&&ph?1:0, l2=RUN&&!ph?1:0;
+    case "bipedal":{
+      const bw=12+br*2,bh=14-br*2,bx=24-bw/2+lunge,by=gY-bh-8+bob,hy=by-9+bob+lunge*.5;
+      sym(bx,by,bw/2,bh,P.main); solo(22+lunge,by+3,4,bh-6,P.belly);
+      sym(17+lunge,hy,7,8,P.pale); eyes(20+lunge,26+lunge,hy+3,rnd,true);
+      const ll=AIR?4:6, l1=(RUN||ATK)&&ph?1:0, l2=(RUN||ATK)&&!ph?1:0;
       solo(bx-3,gY-ll-l1,3,ll,P.deep); solo(48-bx,gY-ll-l2,3,ll,P.deep);
       const al=AIR?5:8, ay=by+4+(AIR?-3:0);
-      if(RUN){ solo(bx-4,ay+(ph?-2:2),3,al,P.deep); solo(47-bx,ay+(ph?2:-2),3,al,P.deep); }
+      if(RUN||ATK){ solo(bx-4+lunge*(ATK?2:1),ay+(ph?-2:2),3,al,P.deep); solo(47-bx-lunge*(ATK?2:1),ay+(ph?2:-2),3,al,P.deep); }
       else sym(bx-4,ay,3,al,P.deep);
-      break;
-    }
-    case "quadruped": {
-      const bh=10-br,bx=10,by=gY-bh-8+bob;
-      sym(bx,by,14,bh,P.main); solo(20,by+2,6,bh-3,P.belly);
-      sym(6,by-4+bob,9,7,P.pale); eyes(9,35,by-2+bob,rnd,false);
-      const lq=AIR?4:6, q1=(RUN&&ph)?1:0, q2=(RUN&&!ph)?1:0;
-      solo(bx+1,gY-lq-q1,3,lq,P.deep); solo(34,gY-lq-q2,3,lq,P.deep);
-      solo(bx+9,gY-lq-q2,3,lq,P.deep); solo(26,gY-lq-q1,3,lq,P.deep);
-      sym(38,by-2+bob,3,3,P.main);
-      break;
-    }
-    case "serpentine": {
-      const amp=REST?1:RUN?3:2, stp=REST?8:RUN?4:6;
+      if(ATK&&f>=3) slash();
+      break; }
+    case "quadruped":{
+      const bh=10-br,bx=10+lunge,by=gY-bh-8+bob;
+      sym(bx,by,14,bh,P.main); solo(20+lunge,by+2,6,bh-3,P.belly);
+      sym(6+lunge,by-4+bob,9,7,P.pale); eyes(9+lunge,35+lunge,by-2+bob,rnd,false);
+      const lq=AIR?4:6,q1=(RUN||ATK)&&ph?1:0,q2=(RUN||ATK)&&!ph?1:0;
+      solo(bx+1,gY-lq-q1,3,lq,P.deep); solo(34+lunge,gY-lq-q2,3,lq,P.deep);
+      solo(bx+9,gY-lq-q2,3,lq,P.deep); solo(26+lunge,gY-lq-q1,3,lq,P.deep);
+      sym(38+lunge,by-2+bob,3,3,P.main);
+      if(ATK&&f>=3) slash();
+      break; }
+    case "serpentine":{
+      const amp=REST?1:RUN?3:ATK?2:2, stp=REST?8:RUN?4:6;
       for(let i=0;i<6;i++){
-        const yy=Math.round(8+i*stp)+(i%2===f%2?-1:0)+bob, wob=Math.round(Math.sin(i+f)*amp);
-        sym(Math.min(21+wob,26),yy,3,stp-1,i%2?P.main:P.deep);
+        const yy=Math.round(8+i*stp)+(i%2===f%2?-1:0)+bob,wob=Math.round(Math.sin(i+f)*amp);
+        sym(Math.min(21+wob+lunge*(i>3?1:0),27),yy,3,stp-1,i%2?P.main:P.deep);
       }
-      const hy=4+bob+(AIR?-2:0);
-      sym(18,hy,6,7,P.pale); eyes(20,26,hy+2,rnd,false);
-      solo(22,hy+5,4,2,"#DC2626");
-      break;
-    }
-    case "avian": {
-      const fly=AIR||RUN, by=gY-16+bob*2-(fly?2:0);
-      sym(19,by,5,9,P.main); solo(22,by+2,4,5,P.belly);
-      const wy=by+(fly?(f%2?-6:-1):(f%2?-3:1));
-      sym(10,wy,9,4,P.pale);
-      sym(15,by-7+bob,7,7,P.pale); eyes(17,29,by-5+bob,rnd,false);
-      solo(22,by-3+bob,4,2,"#F59E0B");
+      const hy=4+bob+(AIR?-2:0)+lunge*2;
+      sym(18+lunge,hy,6,7,P.pale); eyes(20+lunge,26+lunge,hy+2,rnd,false);
+      solo(22+lunge,hy+5,4,2,"#DC2626");
+      if(ATK&&f>=3){ solo(34,hy+2,6,2,"#FFF7CC"); solo(36,hy,2,6,"#FFD24A"); }
+      break; }
+    case "avian":{
+      const fly=AIR||RUN, by=gY-16+bob*2-(fly?2:0)+lunge;
+      sym(19+lunge,by,5,9,P.main); solo(22+lunge,by+2,4,5,P.belly);
+      const wy=by+(fly?(ph?-6:-1):(ph?-3:1));
+      sym(10+lunge,wy,9,4,P.pale);
+      sym(15+lunge,by-7+bob,7,7,P.pale); eyes(17+lunge,29+lunge,by-5+bob,rnd,false);
+      solo(22+lunge,by-3+bob,4,2,"#F59E0B");
       if(!fly){ sym(20,gY-4,3,4,"#F59E0B"); }
-      break;
-    }
-    case "aquatic": {
+      if(ATK&&f>=3){ solo(33,by+1,7,2,"#FFF7CC"); solo(35,by-1,2,6,"#FFD24A"); }
+      break; }
+    case "aquatic":{
       const by=gY-18+bob*2-(AIR?3:0);
       sym(15,by,9,11,P.main); solo(20,by+3,4,5,P.belly);
-      const ty=by+((f%(REST?4:2))?(REST?0:1):-1);
+      const ty=by+((f%(REST?4:2))?(REST?0:1):-1)+(ATK&&f>=3?3:0);
       sym(8,ty,7,7,P.pale); sym(24,by+4,3,4,P.deep); solo(19,by-3,3,3,P.pale);
       eyes(18,28,by+3,rnd,false);
-      break;
-    }
-    case "insectoid": {
+      if(ATK&&f>=3) slash();
+      break; }
+    case "insectoid":{
       const by=gY-20+bob;
-      sym(20,by,4,6,P.deep); sym(19,by+7,5,8,P.main);
-      eyes(21,25,by+1,rnd,false);
-      const ly=by+15, lift=(AIR||RUN)?(ph?1:-1):0, rlift=(RUN&&ph===0)||(AIR&&f%2)?1:0;
+      sym(20+lunge,by,4,6,P.deep); sym(19+lunge,by+7,5,8,P.main);
+      eyes(21+lunge,25+lunge,by+1,rnd,false);
+      const ly=by+15,lift=(AIR||RUN)?(ph?1:-1):0;
       for(let i=0;i<3;i++){ sym(16+i*2,ly-i*2-lift*(i-1),2,2+(ph&&!REST?1:0),P.deep); }
-      if(RUN||AIR){ sym(27,ly-1+rlift,3,3,P.deep); }
-      sym(21,by-4,1,4,P.deep); sym(26,by-4,1,4,P.deep);
-      break;
-    }
-    case "amorphous": {
-      const sq=act==="jump"?Math.max(bob,-7):0, r=9+br-(act==="jump"?1:0);
-      const yy=gY-r*2-2+bob-sq*0;
-      sym(24-r,gY-r*2-2+bob,r,r*2-bob*0,P.main);
+      if(RUN||AIR){ sym(27,ly-1,3,3,P.deep); }
+      sym(21+lunge,by-4,1,4,P.deep); sym(26+lunge,by-4,1,4,P.deep);
+      if(ATK&&f>=3) slash();
+      break; }
+    case "amorphous":{
+      const sq=act==="jump"?Math.max(bob,-7):0, r=9+br-(act==="jump"?1:0)-(ATK&&f>=3?1:0);
+      const yy=gY-r*2-2+bob;
+      sym(24-r,gY-r*2-2+bob,r,r*2,P.main);
       solo(22,yy+5+(sq?-2:0),4,3,P.belly);
       eyes(20,26,yy+6+(sq?-2:0),rnd,true);
       solo(21,gY-4+br+(REST?0:bob),6,2,P.deep);
-      break;
-    }
-    case "floating": {
+      if(ATK&&f>=3){ sym(24-r-4,gY-r*2,4,r,"hsl(0,80%,60%)"); }
+      break; }
+    case "floating":{
       const by=10+bob*2+(act==="run"?-2:0);
       sym(15,by,9,12,P.pale); solo(21,by+4,6,6,P.main);
       eyes(18,27,by+4,rnd,true);
       for(let i=0;i<4;i++){
-        const tx=16+i*4, tl=6+((i+f)%(REST?4:2)?2:0)+(act==="jump"?2:0);
+        const tx=16+i*4,tl=6+((i+f)%(REST?4:2)?2:0)+(act==="jump"?2:0);
         solo(tx,by+12,2,tl,P.main);
       }
-      break;
-    }
+      if(ATK&&f>=3){ solo(31,by+2,8,2,"#FFF7CC"); solo(33,by,2,8,"#FFD24A"); }
+      break; }
   }
 }
-function setBar(k,v){
-  document.getElementById("bar"+k).style.width=v+"%";
-  document.getElementById("v"+k).textContent=v;
-}
-let curFrames=[], curIdx=0, curTimer=null, curSeedStr="", counter=0, curAct="walk", lastDexSeed=null;
-const ACT_MS={walk:320,run:150,jump:115,rest:430};
-let pvXray=false, curFam="bipedal";
-const dexGrid = document.getElementById("dexGrid");
-function addDexEntry(name, frameCanvas){
-  if(dexGrid.querySelector(".hint")) dexGrid.innerHTML="";
-  const item=document.createElement("div"); item.className="dexitem";
-  const c=document.createElement("canvas"); c.width=48; c.height=48;
-  c.getContext("2d").drawImage(frameCanvas,0,0);
-  const label=document.createElement("span"); label.textContent=name;
-  item.appendChild(c); item.appendChild(label);
-  dexGrid.prepend(item);
-  while(dexGrid.children.length>12) dexGrid.removeChild(dexGrid.lastChild);
-}
-function generate(text){
-  const seedStr=(text||"").trim()||"slime";
-  const seed=fnv1a(seedStr), rnd=mulberry32(seed);
-  const F=FAMILIES[seed%FAMILIES.length];
-  P=makePalette(mulberry32(seed^0x9E3779B9));
-  curFam=F.key;
-  const name=makeName(mulberry32(seed^0x85EBCA6B));
-  const lore=makeLore(mulberry32(seed^0xC2B2AE35));
-  const baseN=2+(seed>>3)%3;
-  const N=curAct==="jump"?Math.max(baseN,8):curAct==="run"?Math.max(baseN,6):curAct==="walk"?Math.max(baseN,4):baseN;
-  curFrames=[];
-  for(let f=0;f<N;f++){
-    const oc=document.createElement("canvas"); oc.width=48; oc.height=48;
-    C=oc.getContext("2d");
-    drawCreature(F.key,f,N,mulberry32(seed),curAct);
-    curFrames.push(oc);
-  }
-  document.getElementById("dexName").textContent=name;
-  document.getElementById("dexFam").textContent=F.zh;
-  counter++;
-  document.getElementById("dexLore").textContent=lore;
-  setBar("HP",30+(seed>>5)%70); setBar("ATK",20+(seed>>9)%80); setBar("SPD",25+(seed>>13)%75);
-  if(curTimer) clearInterval(curTimer);
-  curIdx=0;
-  vctx.clearRect(0,0,48,48); vctx.drawImage(curFrames[0],0,0);
-  if(pvXray) drawXray();
-  curTimer=setInterval(()=>{
-    curIdx=(curIdx+1)%curFrames.length;
-    vctx.clearRect(0,0,48,48); vctx.drawImage(curFrames[curIdx],0,0);
-    if(pvXray) drawXray();
-  },ACT_MS[curAct]);
-  if(lastDexSeed!==seedStr) addDexEntry(name,curFrames[0]);
-  lastDexSeed=seedStr;
-  curSeedStr=seedStr;
-}
-document.getElementById("genBtn").onclick=()=>generate(document.getElementById("seedInput").value);
-document.getElementById("seedInput").addEventListener("keydown",e=>{ if(e.key==="Enter") generate(e.target.value); });
-document.querySelectorAll(".chip").forEach(ch => ch.onclick=()=>{
-  document.getElementById("seedInput").value=ch.textContent; generate(ch.textContent);
-});
-document.getElementById("randBtn").onclick=()=>{
-  const words=["火龍","cyber cat","moon slime","雷電鳥","ghost dog","pixel fish","星空蟲","lava knight","bubble fox","數據蛇","snow bot","彩虹史萊姆"];
-  const w=words[Math.floor(Math.random()*words.length)];
-  document.getElementById("seedInput").value=w; generate(w);
-};
-document.getElementById("saveBtn").onclick=()=>{
-  const a=document.createElement("a");
-  a.download="species_"+(curSeedStr||"none").replace(/\W+/g,"_").slice(0,20)+".png";
-  a.href=view.toDataURL("image/png"); a.click();
-};
-/* —— 01 預覽：動作切換 + X-Ray（按八族畫對應骨架，跟住動作郁）—— */
+
+/* ============ X-Ray（八族骨架）============ */
+let curFrames=[],curIdx=0,curTimer=null,curSeedStr="",curAct="idle",curFam="bipedal",pvXray=false,lastSeed=null;
+const ACT_MS={idle:300,walk:320,run:150,jump:115,attack:170,rest:430};
+const ACT_N ={idle:4};
+function minN(act,base){ return act==="jump"?Math.max(base,8):act==="run"?Math.max(base,6):act==="walk"?Math.max(base,4):act==="attack"?6:ACT_N[act]||base; }
+const view=document.getElementById("dexView"), vctx=view.getContext("2d");
 function drawXray(){
-  const N=curFrames.length||1, f=curIdx%N, t=f/N, ph=f%2;
+  const N=curFrames.length||1,f=curIdx%N,t=f/N,ph=f%2;
   let bob=0;
-  if(curAct==="walk") bob=f<N/2?-1:0;
+  if(curAct==="idle") bob=[0,-1,-1,0][f%4];
+  else if(curAct==="walk") bob=f<N/2?-1:0;
   else if(curAct==="run") bob=-Math.round(Math.abs(Math.sin(t*Math.PI*2))*3);
   else if(curAct==="jump") bob=-Math.round(Math.sin(Math.PI*t)*7);
+  else if(curAct==="attack") bob=(f>=3&&f<=4)?-1:0;
   else bob=(f%4<1)?-1:0;
-  const RUN=curAct==="run", REST=curAct==="rest", AIR=curAct==="jump"&&bob<=-3;
-  const sw=REST?0:(RUN?3:2)*(ph?-1:1);
+  const RUN=curAct==="run",REST=curAct==="rest",AIR=curAct==="jump"&&bob<=-3,ATK=curAct==="attack";
+  const sw=REST?0:(RUN?3:2)*(ph?-1:1), lg=ATK?[0,0,0,2,2,0][f%6]:0;
   vctx.save();
   vctx.globalAlpha=.5; vctx.fillStyle="#0B1120"; vctx.fillRect(0,0,48,48);
   vctx.globalAlpha=1;
@@ -696,96 +544,121 @@ function drawXray(){
   const skul=(x,y)=>{vctx.beginPath();vctx.arc(x,y,2.5,0,7);vctx.stroke();jnt(x,y);};
   vctx.strokeStyle="#FB923C";
   switch(curFam){
-    case "bipedal":{
-      const bh=ph?12:14, by=44-bh-8+bob, hy=by-9;
-      skul(24,hy+4);
-      bone(24,hy+8,24,by+bh);
-      const al=AIR?5:8, ay=by+4+(AIR?-3:0);
-      if(RUN){ bone(24,ay-2,15.5,ay+(ph?0:4)); bone(24,ay-2,29.5,ay+(ph?4:0)); }
-      else { bone(24,ay-2,15.5,ay+al-1); bone(24,ay-2,29.5,ay+al-1); }
-      const l1=(RUN&&ph)?1:0, l2=(RUN&&!ph)?1:0, ll=AIR?4:6;
-      bone(24,by+bh,16.5,44-l1-ll+ll-ll*.5-l1); bone(24,by+bh,29.5,44-l2-ll*.5);
-      break;
-    }
-    case "quadruped":{
-      const bh=ph?9:10, by=44-bh-8+bob, sy=by+bh/2;
-      bone(12,sy,36,sy);
-      skul(10.5,by-.5); skul(37.5,by-.5);
-      bone(12,sy,10.5,by+.5); bone(36,sy,37.5,by+.5);
-      const q1=(RUN&&ph)?1:0, q2=(RUN&&!ph)?1:0, lq=AIR?4:6;
-      [[12.5,q1],[20.5,q2],[27.5,q2],[35.5,q1]].forEach(l=>bone(l[0],sy,l[0],44-q1*0-lq-l[1]+lq));
-      break;
-    }
-    case "serpentine":{
-      const amp=REST?1:RUN?3:2, stp=REST?8:RUN?4:6;
-      let px=null,py=null;
-      for(let i=0;i<6;i++){
-        const wob=Math.round(Math.sin(i+f)*amp);
-        const cx=Math.min(21+wob,26)+1.5, cy=Math.round(8+i*stp)+(i%2===f%2?-1:0)+bob+(stp-1)/2;
-        if(px!==null) bone(px,py,cx,cy);
-        jnt(cx,cy); px=cx; py=cy;
-      }
-      skul(24,4+bob+(AIR?-2:0)+3.5);
-      break;
-    }
-    case "avian":{
-      const fly=AIR||RUN, by=44-16+bob*2-(fly?2:0);
-      skul(18.5,by-3.5); skul(29.5,by-3.5);
-      bone(24,by+1,24,by+8);
+    case "bipedal":{ const bh=ph?12:14,by=44-bh-8+bob,hy=by-9;
+      skul(24+lg,hy+4); bone(24+lg,hy+8,24+lg,by+bh);
+      const al=AIR?5:8,ay=by+4+(AIR?-3:0),ax=lg?(ATK?2:1)*lg:0;
+      bone(24+ax,ay-2,15.5,ay+(ph?0:al-1)); bone(24+ax,ay-2,29.5,ay+(ph?al-1:0));
+      const ll=AIR?4:6,l1=(RUN||ATK)&&ph?1:0,l2=(RUN||ATK)&&!ph?1:0;
+      bone(24,by+bh,16.5,44-l1-ll*.5); bone(24,by+bh,29.5,44-l2-ll*.5);
+      if(ATK&&f>=3){ vctx.strokeStyle="#FFD24A"; bone(30,12,40,22); vctx.strokeStyle="#FB923C"; } break; }
+    case "quadruped":{ const bh=ph?9:10,by=44-bh-8+bob,sy=by+bh/2,sx=lg*.5;
+      bone(12+sx,sy,36+sx,sy); skul(10.5+sx,by-.5); skul(37.5+sx,by-.5);
+      bone(12+sx,sy,10.5+sx,by+.5); bone(36+sx,sy,37.5+sx,by+.5);
+      const q1=(RUN||ATK)&&ph?1:0,q2=(RUN||ATK)&&!ph?1:0,lq=AIR?4:6;
+      [[12.5+sx,q1],[20.5+sx,q2],[27.5+sx,q2],[35.5+sx,q1]].forEach(l=>bone(l[0],sy,l[0],44-lq-l[1]+q1*0)); break; }
+    case "serpentine":{ const amp=REST?1:RUN?3:2,stp=REST?8:RUN?4:6; let px=null,py=null;
+      for(let i=0;i<6;i++){ const wob=Math.round(Math.sin(i+f)*amp),
+        cx=Math.min(21+wob,26)+1.5,cy=Math.round(8+i*stp)+(i%2===f%2?-1:0)+bob+(stp-1)/2;
+        if(px!==null) bone(px,py,cx,cy); jnt(cx,cy); px=cx; py=cy; }
+      skul(24+lg*2,7.5+bob+(AIR?-2:0)); break; }
+    case "avian":{ const fly=AIR||RUN,by=44-16+bob*2-(fly?2:0)+lg;
+      skul(18.5+lg,by-3.5); skul(29.5+lg,by-3.5); bone(24+lg,by+1,24+lg,by+8);
       const wy=by+(fly?(ph?-6:-1):(ph?-3:1));
-      bone(20,wy+2,10,wy+2); bone(28,wy+2,38,wy+2);
-      jnt(10,wy+2); jnt(38,wy+2);
-      if(!fly){ bone(21.5,by+7,21.5,44); bone(26.5,by+7,26.5,44); }
-      break;
-    }
-    case "aquatic":{
-      const by=44-18+bob*2-(AIR?3:0);
-      skul(19,by+4); skul(29,by+4);
-      bone(24,by+1,24,by+10);
-      const ty=by+((f%(REST?4:2))?(REST?0:1):-1);
+      bone(20+lg,wy+2,10+lg,wy+2); bone(28+lg,wy+2,38+lg,wy+2);
+      jnt(10+lg,wy+2); jnt(38+lg,wy+2);
+      if(!fly){ bone(21.5,by+7,21.5,44); bone(26.5,by+7,26.5,44); } break; }
+    case "aquatic":{ const by=44-18+bob*2-(AIR?3:0);
+      skul(19,by+4); skul(29,by+4); bone(24,by+1,24,by+10);
+      const ty=by+((f%(REST?4:2))?(REST?0:1):-1)+(ATK&&f>=3?3:0);
       bone(24,by+5,11.5,ty+3.5); bone(24,by+5,36.5,ty+3.5);
-      jnt(11.5,ty+3.5); jnt(36.5,ty+3.5);
-      break;
-    }
-    case "insectoid":{
-      const by=44-20+bob, ly=by+15;
-      bone(24,by,24,by+15);
-      skul(24,by+3);
-      bone(21.5,by,21.5,by-4); bone(26.5,by,26.5,by-4);
-      for(let i=0;i<3;i++){
-        const tipy=ly-i*2+1+(RUN&&i===1?sw:0);
-        bone(22,by+8+i*2,17+i*2,tipy); bone(26,by+8+i*2,31-i*2,tipy);
-        jnt(17+i*2,tipy); jnt(31-i*2,tipy);
-      }
-      break;
-    }
-    case "amorphous":{
-      const r=(ph?10:9)-(curAct==="jump"?1:0);
-      const cy=44-r+bob-1;
-      vctx.beginPath(); vctx.arc(24,cy,3+(ph?1:0),0,7); vctx.stroke();
-      jnt(24,cy);
-      break;
-    }
-    case "floating":{
-      const by=10+bob*2+(curAct==="run"?-2:0);
-      skul(19.5,by+4); skul(28.5,by+4);
-      bone(24,by+2,24,by+10);
-      for(let i=0;i<4;i++){
-        const tl=6+((i+f)%(REST?4:2)?2:0)+(curAct==="jump"?2:0);
-        bone(17+i*4,by+12,17+i*4,by+12+tl);
-      }
-      break;
-    }
+      jnt(11.5,ty+3.5); jnt(36.5,ty+3.5); break; }
+    case "insectoid":{ const by=44-20+bob,ly=by+15;
+      bone(24+lg,by,24+lg,by+15); skul(24+lg,by+3);
+      bone(21.5+lg,by,21.5+lg,by-4); bone(26.5+lg,by,26.5+lg,by-4);
+      for(let i=0;i<3;i++){ const tipy=ly-i*2+1+(RUN&&i===1?sw:0);
+        bone(22+lg,by+8+i*2,17+i*2,tipy); bone(26+lg,by+8+i*2,31-i*2,tipy);
+        jnt(17+i*2,tipy); jnt(31-i*2,tipy); } break; }
+    case "amorphous":{ const r=(ph?10:9)-(curAct==="jump"?1:0),cy=44-r+bob-1;
+      vctx.beginPath(); vctx.arc(24,cy,3+(ph?1:0),0,7); vctx.stroke(); jnt(24,cy); break; }
+    case "floating":{ const by=10+bob*2+(curAct==="run"?-2:0);
+      skul(19.5,by+4); skul(28.5,by+4); bone(24,by+2,24,by+10);
+      for(let i=0;i<4;i++){ const tl=6+((i+f)%(REST?4:2)?2:0)+(curAct==="jump"?2:0);
+        bone(17+i*4,by+12,17+i*4,by+12+tl); } break; }
   }
   vctx.restore();
 }
+
+/* ============ 生成主流程 ============ */
+function generate(text){
+  const seedStr=(text||"").trim()||"slime", seed=fnv1a(seedStr);
+  const F=FAMILIES[seed%FAMILIES.length];
+  P=makePalette(mulberry32a(seed^0x9E3779B9));
+  curFam=F.key;
+  const name=makeName(mulberry32a(seed^0x85EBCA6B)), lore=makeLore(mulberry32a(seed^0xC2B2AE35));
+  const baseN=2+((seed>>>3)%3), N=Math.max(2,minN(curAct,baseN));
+  curFrames=[];
+  for(let f=0;f<N;f++){
+    const oc=document.createElement("canvas"); oc.width=48; oc.height=48;
+    C=oc.getContext("2d");
+    drawCreature(F.key,f,N,mulberry32a(seed),curAct);
+    applyStyle(oc);
+    curFrames.push(oc);
+  }
+  document.getElementById("dexName").textContent=name;
+  document.getElementById("dexFam").textContent=F.zh;
+  document.getElementById("dexLore").textContent=lore;
+  setBar("HP",30+(seed>>5)%70); setBar("ATK",20+(seed>>9)%80); setBar("SPD",25+(seed>>13)%75);
+  document.getElementById("gfileChip").textContent=
+    seedStr.replace(/\s+/g,"-")+"_"+curAct+".png · 48×48 · f"+N+(STYLES[curStyle].id!=="neon"?" · "+STYLES[curStyle].nm.toLowerCase():"");
+  if(curTimer) clearInterval(curTimer);
+  curIdx=0;
+  if(!curFrames.length){ lastSeed=seedStr; curSeedStr=seedStr; return; }
+  vctx.clearRect(0,0,48,48); if(curFrames[0]) vctx.drawImage(curFrames[0],0,0);
+  if(pvXray) drawXray();
+  curTimer=setInterval(()=>{
+    if(!curFrames.length) return;
+    curIdx=(curIdx+1)%curFrames.length;
+    var fr=curFrames[curIdx];
+    vctx.clearRect(0,0,48,48); if(fr) vctx.drawImage(fr,0,0);
+    if(pvXray) drawXray();
+  },ACT_MS[curAct]);
+  lastSeed=seedStr; curSeedStr=seedStr;
+}
+function setBar(k,v){
+  document.getElementById("bar"+k).style.width=v+"%";
+  document.getElementById("v"+k).textContent=v;
+}
+
+/* ============ 匯出：FRAME / SHEET PNG ============ */
+function dlCanvas(cv,fname){
+  const a=document.createElement("a"); a.download=fname; a.href=cv.toDataURL("image/png"); a.click();
+}
+function upScale(src,scale){
+  const cv=document.createElement("canvas"); cv.width=src.width*scale; cv.height=src.height*scale;
+  const cx=cv.getContext("2d"); cx.imageSmoothingEnabled=false; cx.drawImage(src,0,0,cv.width,cv.height);
+  return cv;
+}
+document.getElementById("saveBtn").onclick=()=>{
+  if(!curFrames.length) return;
+  dlCanvas(upScale(view,8),"species_"+(curSeedStr||"none").replace(/\W+/g,"_")+"_f"+curIdx+".png");
+};
+document.getElementById("sheetBtn").onclick=()=>{
+  if(!curFrames.length) return;
+  const strip=document.createElement("canvas");
+  strip.width=48*curFrames.length; strip.height=48;
+  const cx=strip.getContext("2d");
+  curFrames.forEach((fr,i)=>cx.drawImage(fr,i*48,0));
+  dlCanvas(upScale(strip,6),"species_"+(curSeedStr||"none").replace(/\W+/g,"_")+"_"+curAct+"_sheet@6x.png");
+};
+
+/* ============ 動作掣 + X-Ray 掣 ============ */
 document.querySelectorAll(".pvctl [data-act]").forEach(b=>{
   b.onclick=()=>{
     curAct=b.dataset.act;
     document.querySelectorAll(".pvctl [data-act]").forEach(x=>{
       x.classList.toggle("on",x===b); x.setAttribute("aria-pressed",x===b?"true":"false");
     });
-    generate(lastDexSeed||"火龍");
+    generate(lastSeed||"火龍");
   };
 });
 const pvXrayBtn=document.getElementById("pvXrayBtn");
@@ -793,9 +666,169 @@ pvXrayBtn.onclick=()=>{
   pvXray=!pvXray;
   pvXrayBtn.classList.toggle("on",pvXray);
   pvXrayBtn.textContent=pvXray?"SKIN ✦":"X-RAY 🦴";
-  vctx.clearRect(0,0,48,48); vctx.drawImage(curFrames[curIdx]||curFrames[0],0,0);
+  var xf=curFrames[curIdx]||curFrames[0];
+  vctx.clearRect(0,0,48,48); if(xf) vctx.drawImage(xf,0,0);
   if(pvXray) drawXray();
 };
+
+/* ============ 輸入接線 ============ */
+document.getElementById("genBtn").onclick=()=>generate(document.getElementById("seedInput").value);
+document.getElementById("seedInput").addEventListener("keydown",e=>{ if(e.key==="Enter") generate(e.target.value); });
+document.querySelectorAll("#creator .chip").forEach(ch=>ch.onclick=()=>{
+  document.getElementById("seedInput").value=ch.textContent; generate(ch.textContent);
+});
+document.getElementById("randBtn").onclick=()=>{
+  const words=["火龍","cyber cat","moon slime","雷電鳥","ghost dog","pixel fish","星空蟲","lava knight","bubble fox","數據蛇","snow bot","彩虹史萊姆"];
+  const w=words[Math.floor(Math.random()*words.length)];
+  document.getElementById("seedInput").value=w; generate(w);
+};
+document.getElementById("heroBtn").onclick=()=>{
+  const v=document.getElementById("heroInput").value;
+  document.getElementById("seedInput").value=v;
+  generate(v);
+  document.getElementById("creator").scrollIntoView({behavior:"smooth"});
+};
+document.getElementById("heroInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter") document.getElementById("heroBtn").click();
+});
+
+/* ============ STYLE SETS UI ============ */
+function buildStyles(){
+  const grid=document.getElementById("styleGrid");
+  const demo="lava knight";
+  STYLES.forEach((st,i)=>{
+    const card=document.createElement("div");
+    card.className="stylecard"+(i===curStyle?" on":"");
+    const cv=document.createElement("canvas"); cv.width=48; cv.height=48;
+    card.appendChild(cv);
+    const nm=document.createElement("span"); nm.className="snm"; nm.textContent=st.nm; card.appendChild(nm);
+    const zh=document.createElement("span"); zh.className="szh"; zh.textContent=st.zh; card.appendChild(zh);
+    card.onclick=()=>{
+      curStyle=i;
+      document.querySelectorAll(".stylecard").forEach((c,k)=>c.classList.toggle("on",k===i));
+      generate(lastSeed||demo);
+      renderLibrary();
+    };
+    grid.appendChild(card);
+    // 畫風格示範（同一隻骑士）
+    const keepP=P,keepC=C;
+    const seed=fnv1a(demo),F=FAMILIES[seed%FAMILIES.length];
+    P=makePalette(mulberry32a(seed^0x9E3779B9));
+    C=cv.getContext("2d");
+    drawCreature(F.key,1,4,mulberry32a(seed),"idle");
+    applyStyle(cv);
+    P=keepP; C=keepC;
+  });
+}
+
+/* ============ IMAGE GENERATOR：無縫貼圖 ============ */
+const TEX_TYPES=["grass","brick","water","dirt"];
+let curTex="grass", texSeedBase=77;
+function makeTile(type,seedInt){
+  const cv=document.createElement("canvas"); cv.width=64; cv.height=64;
+  const cx=cv.getContext("2d"), img=cx.createImageData(64,64), d=img.data;
+  const rnd=mulberry32a(seedInt);
+  // 可平鋪 value noise：整數頻率正弦疊加
+  const f1=1+Math.floor(rnd()*2), f2=2+Math.floor(rnd()*3), ph1=rnd()*6.28, ph2=rnd()*6.28;
+  const noise=(x,y)=>.5+.25*Math.sin(2*Math.PI*f1*x/64+ph1)+.25*Math.sin(2*Math.PI*f2*y/64+ph2);
+  for(let y=0;y<64;y++)for(let x=0;x<64;x++){
+    const n=noise(x,y), i=(y*64+x)*4;
+    let r,g,b;
+    if(type==="grass"){ r=34+n*30; g=120+n*70; b=52+n*24; }
+    else if(type==="brick"){
+      const row=Math.floor(y/16), off=(row%2)*8, bx=(x+off)%32, by=y%16;
+      const mortar=bx<2||by<2, shade=noise(Math.floor(x/8),row);
+      if(mortar){ r=88+n*20; g=82+n*20; b=78+n*20; }
+      else { r=146+shade*50; g=74+shade*26; b=58+shade*18; }
+    }
+    else if(type==="water"){ r=30+n*24; g=96+n*50; b=190+n*55; }
+    else { r=124+n*46; g=88+n*34; b=60+n*24; }
+    d[i]=Math.min(255,r); d[i+1]=Math.min(255,g); d[i+2]=Math.min(255,b); d[i+3]=255;
+  }
+  cx.putImageData(img,0,0);
+  // 細節層（座標取模保證跨邊無縫）
+  const det=mulberry32a(seedInt^0xA5A5);
+  if(type==="grass"){
+    for(let k=0;k<26;k++){
+      const x=Math.floor(det()*64),y=Math.floor(det()*64),h=2+Math.floor(det()*3);
+      cx.fillStyle=det()<.15?"#FDE047":"#166534";
+      cx.fillRect(x,y,1,h); cx.fillRect((x+63)%64,y,1,h); cx.fillRect(x,(y+63)%64,1,h);
+    }
+  } else if(type==="dirt"){
+    for(let k=0;k<14;k++){
+      const x=Math.floor(det()*64),y=Math.floor(det()*64),s=1+Math.floor(det()*2);
+      cx.fillStyle=det()<.5?"#78716C":"#57534E";
+      cx.fillRect(x,y,s,s); cx.fillRect((x+63)%64,y,s,s); cx.fillRect(x,(y+63)%64,s,s);
+    }
+  } else if(type==="water"){
+    cx.fillStyle="rgba(255,255,255,.35)";
+    for(let k=0;k<7;k++){ const y=Math.floor(det()*64),x=Math.floor(det()*54);
+      cx.fillRect(x,y,4+Math.floor(det()*5),1); }
+  }
+  return cv;
+}
+function renderTex(){
+  const tile=makeTile(curTex,texSeedBase+["grass","brick","water","dirt"].indexOf(curTex));
+  const tv=document.getElementById("texView");
+  tv.getContext("2d").clearRect(0,0,64,64);
+  tv.getContext("2d").drawImage(tile,0,0);
+  const td=document.getElementById("texTiled").getContext("2d");
+  td.clearRect(0,0,128,128);
+  [[0,0],[64,0],[0,64],[64,64]].forEach(o=>td.drawImage(tile,o[0],o[1]));
+  document.getElementById("texCap").textContent=curTex.toUpperCase()+" · 64×64 TILE · SEED "+(texSeedBase+["grass","brick","water","dirt"].indexOf(curTex));
+}
+document.querySelectorAll("[data-tex]").forEach(ch=>ch.onclick=()=>{
+  curTex=ch.dataset.tex;
+  document.querySelectorAll("[data-tex]").forEach(x=>x.classList.toggle("on",x===ch));
+  renderTex();
+});
+document.getElementById("tileSaveBtn").onclick=()=>dlCanvas(upScale(document.getElementById("texView"),4),curTex+"_tile_64x64@4x.png");
+
+/* ============ LIBRARY 例庫 ============ */
+const LIB={
+  all:{zh:"全部",seeds:["火龍","ghost dog","moon slime","菇菇犬","數據蛇","snow bot","星空蟲","lava knight","bubble fox","雷電鳥","pixel fish","彩虹史萊姆"]},
+  hero:{zh:"角色",seeds:["lava knight","cyber cat","雷電鳥","數據蛇","star paladin","neon ranger"]},
+  beast:{zh:"怪獸",seeds:["火龍","ghost dog","星空蟲","shadow wolf","toxic bat","rock golem"]},
+  cute:{zh:"得意",seeds:["moon slime","bubble fox","菇菇犬","彩虹史萊姆","pixel fish","snow bot"]}
+};
+let curTab="all";
+function renderLibrary(){
+  const grid=document.getElementById("libGrid"); grid.innerHTML="";
+  LIB[curTab].seeds.forEach(s=>{
+    const item=document.createElement("div"); item.className="libitem";
+    const cv=document.createElement("canvas"); cv.width=48; cv.height=48;
+    const seed=fnv1a(s),F=FAMILIES[seed%FAMILIES.length];
+    const keepP=P,keepC=C;
+    P=makePalette(mulberry32a(seed^0x9E3779B9));
+    C=cv.getContext("2d");
+    drawCreature(F.key,0,minN("idle",2+(seed>>3)%3),mulberry32a(seed),"idle");
+    applyStyle(cv);
+    P=keepP; C=keepC;
+    const sp=document.createElement("span"); sp.textContent=s;
+    const em=document.createElement("em"); em.textContent=F.zh;
+    item.appendChild(cv); item.appendChild(sp); item.appendChild(em);
+    item.onclick=()=>{
+      document.getElementById("seedInput").value=s;
+      generate(s);
+      document.getElementById("creator").scrollIntoView({behavior:"smooth"});
+    };
+    grid.appendChild(item);
+  });
+}
+(function buildTabs(){
+  const tabs=document.getElementById("libTabs");
+  Object.keys(LIB).forEach(k=>{
+    const b=document.createElement("button");
+    b.className="chip"+(k===curTab?" on":""); b.textContent=LIB[k].zh+" "+k.toUpperCase();
+    b.onclick=()=>{ curTab=k; buildTabs(); renderLibrary(); };
+    tabs.appendChild(b);
+  });
+})();
+
+/* ============ INIT ============ */
+buildStyles();
+renderTex();
+renderLibrary();
 generate("火龍");
 </script>
 </body>
