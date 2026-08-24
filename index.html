@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixel Animations — 本地骨架生成</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; min-height:100vh;
+    background:#12121c;
+    background-image:
+      linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+    background-size:24px 24px;
+    color:#aab3d4; font-family:"Segoe UI",system-ui,sans-serif;
+    padding:32px 16px 60px;
+  }
+  header { text-align:center; margin-bottom:36px; }
+  h1 {
+    margin:0 0 6px; color:#e8ecff; letter-spacing:2px;
+    font-size:26px; text-transform:uppercase;
+    text-shadow:0 0 18px rgba(86,196,102,.35);
+  }
+  header p { margin:0; font-size:13px; opacity:.7; }
+  .badge {
+    display:inline-block; margin-top:10px; padding:3px 10px;
+    border:1px solid #56c466; color:#56c466; font-size:11px;
+    letter-spacing:1px; border-radius:3px;
+  }
+  .grid {
+    display:grid; gap:24px; max-width:900px; margin:0 auto;
+    grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
+  }
+  .card {
+    background:#191926; border:1px solid #2b2b40; border-radius:10px;
+    padding:18px; box-shadow:0 8px 30px rgba(0,0,0,.45);
+  }
+  .card h2 { margin:0 0 12px; font-size:15px; color:#e8ecff; letter-spacing:1px; }
+  .stage {
+    display:flex; align-items:flex-end; justify-content:center;
+    height:230px; border-radius:6px; padding-bottom:18px; overflow:hidden;
+    background:
+      repeating-conic-gradient(#15151f 0% 25%, #1a1a27 0% 50%) 0 0/20px 20px;
+  }
+  /* ---- 精靈：sprite sheet + steps() ---- */
+  .sprite {
+    --z:4;                       /* 縮放倍數（整數倍，保持像素銳利） */
+    --fw:calc(var(--logical) * var(--z) * 1px);
+    width:var(--fw); aspect-ratio:1/1;
+    image-rendering:pixelated;
+    background-repeat:no-repeat;
+    background-size:calc(var(--frames) * var(--fw)) 100%;
+    animation:play var(--dur,1.28s) steps(var(--frames)) infinite;
+  }
+  @keyframes play {
+    from { background-position-x:0 }
+    to   { background-position-x:calc(-1 * var(--frames) * var(--fw)) }
+  }
+  .slime  { --logical:32; --frames:16; background-image:url("slime_sheet@8x.png"); }
+  .walker { --logical:48; --frames:16; background-image:url("walker_sheet@8x.png"); }
+  .paused { animation-play-state:paused !important; }
+
+  .controls {
+    display:flex; align-items:center; gap:10px; margin-top:14px; flex-wrap:wrap;
+    font-size:12px;
+  }
+  button, select {
+    background:#23233a; color:#ccd3ef; border:1px solid #363652;
+    padding:5px 12px; border-radius:5px; cursor:pointer; font-size:12px;
+  }
+  button:hover, select:hover { border-color:#56c466; }
+  input[type=range] { accent-color:#56c466; flex:1; min-width:80px; }
+  .fps { font-variant-numeric:tabular-nums; color:#56c466; min-width:52px; text-align:right; }
+  details {
+    max-width:900px; margin:30px auto 0; background:#191926;
+    border:1px solid #2b2b40; border-radius:10px; padding:14px 18px; font-size:13px;
+  }
+  summary { cursor:pointer; color:#e8ecff; letter-spacing:1px; }
+  pre {
+    background:#101019; padding:12px; border-radius:6px; overflow-x:auto;
+    font-size:12px; line-height:1.5; color:#9fe8af;
+  }
+  footer { text-align:center; margin-top:34px; font-size:12px; opacity:.55; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Pixel Animation Lab</h1>
+  <p>純本地生成 · Python 骨架運動學 → sprite sheet → 網頁零依賴播放</p>
+  <span class="badge">16 FRAMES · STEPS() · PIXELATED</span>
+</header>
+
+<div class="grid">
+  <div class="card" data-base-fps="12.5">
+    <h2>🟢 SLIME HOP</h2>
+    <div class="stage"><div class="sprite slime"></div></div>
+    <div class="controls">
+      <button class="toggle">⏸ Pause</button>
+      <select class="zoom"><option value="2">2×</option><option value="4" selected>4×</option><option value="5">5×</option><option value="8">8×</option></select>
+      <input class="speed" type="range" min="0.25" max="3" step="0.25" value="1">
+      <span class="fps">12.5 fps</span>
+    </div>
+  </div>
+
+  <div class="card" data-base-fps="12.5">
+    <h2>🦴 SKELETON WALKER</h2>
+    <div class="stage"><div class="sprite walker"></div></div>
+    <div class="controls">
+      <button class="toggle">⏸ Pause</button>
+      <select class="zoom"><option value="2">2×</option><option value="3">3×</option><option value="4" selected>4×</option><option value="6">6×</option></select>
+      <input class="speed" type="range" min="0.25" max="3" step="0.25" value="1">
+      <span class="fps">12.5 fps</span>
+    </div>
+  </div>
+</div>
+
+<details>
+  <summary>⚙️ 點樣嵌入你自己嘅網頁／遊戲？</summary>
+  <p>網頁（純 CSS，零 JS）：</p>
+<pre>.sprite {
+  width: 192px; aspect-ratio: 1;           /* 48px 邏輯 × 4 */
+  image-rendering: pixelated;
+  background: url("walker_sheet@8x.png") 0 0 / 3072px 100% no-repeat;
+  animation: play 1.28s steps(16) infinite;
+}
+@keyframes play { to { background-position-x: -3072px } }</pre>
+  <p>遊戲引擎：匯入 <code>*_sheet.png</code>（透明 RGBA），每格 48×48（walker）／32×32（slime），16 格，12.5 fps。</p>
+</details>
+
+<footer>generated locally · make_slime.py + make_walker.py · FK skeleton rig</footer>
+
+<script>
+document.querySelectorAll(".card").forEach(card => {
+  const sprite = card.querySelector(".sprite");
+  const fpsEl  = card.querySelector(".fps");
+  const BASE   = 1.28;                        // 秒，16 帧 @12.5fps
+  const toggle = card.querySelector(".toggle");
+  toggle.onclick = () => {
+    sprite.classList.toggle("paused");
+    toggle.textContent = sprite.classList.contains("paused") ? "▶ Play" : "⏸ Pause";
+  };
+  card.querySelector(".zoom").onchange = e => sprite.style.setProperty("--z", e.target.value);
+  card.querySelector(".speed").oninput = e => {
+    const s = parseFloat(e.target.value);
+    sprite.style.setProperty("--dur", (BASE / s) + "s");
+    fpsEl.textContent = (12.5 * s).toFixed(1) + " fps";
+  };
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "slime_hop",
+  "frameSize": [
+    32,
+    32
+  ],
+  "frameCount": 16,
+  "fps": 12.5,
+  "loop": true,
+  "layout": "horizontal-strip",
+  "files": {
+    "previewGif": "slime.gif",
+    "spriteSheetLogical": "slime_sheet.png",
+    "spriteSheetScaled": "slime_sheet@8x.png",
+    "scale": 8
+  }
+}
