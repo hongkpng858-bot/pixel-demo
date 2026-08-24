@@ -60,6 +60,10 @@
   }
   .slime  { --logical:32; --frames:16; background-image:url("slime_sheet@8x.png"); }
   .walker { --logical:48; --frames:16; background-image:url("walker_sheet@8x.png"); }
+  /* X 光模式：切換去骨架版 sheet */
+  .walker.xray { background-image:url("walker_rig@8x.png"); }
+  .rigbtn { border-color:#ffaa28; color:#ffcf8a; }
+  .rigbtn.on { background:#3a2c14; border-color:#ffaa28; }
   .paused { animation-play-state:paused !important; }
 
   .controls {
@@ -110,6 +114,7 @@
     <div class="stage"><div class="sprite walker"></div></div>
     <div class="controls">
       <button class="toggle">⏸ Pause</button>
+      <button class="rigbtn">🦴 Rig：OFF</button>
       <select class="zoom"><option value="2">2×</option><option value="3">3×</option><option value="4" selected>4×</option><option value="6">6×</option></select>
       <input class="speed" type="range" min="0.25" max="3" step="0.25" value="1">
       <span class="fps">12.5 fps</span>
@@ -141,6 +146,12 @@ document.querySelectorAll(".card").forEach(card => {
   toggle.onclick = () => {
     sprite.classList.toggle("paused");
     toggle.textContent = sprite.classList.contains("paused") ? "▶ Play" : "⏸ Pause";
+  };
+  const rigBtn = card.querySelector(".rigbtn");
+  if (rigBtn) rigBtn.onclick = () => {
+    const on = sprite.classList.toggle("xray");
+    rigBtn.textContent = on ? "🦴 Rig：ON" : "🦴 Rig：OFF";
+    rigBtn.classList.toggle("on", on);
   };
   card.querySelector(".zoom").onchange = e => sprite.style.setProperty("--z", e.target.value);
   card.querySelector(".speed").oninput = e => {
