@@ -493,16 +493,127 @@ const FAMILIES=[
   {key:"amorphous",zh:"黏體族"},{key:"floating",zh:"浮遊族"}];
 /* 關鍵字→家族：打乜字出邊族；認唔到先用 seed 揀 */
 const SPECIES_KW=[
-  [/slime|史萊姆|果凍|jelly|黏/i,"amorphous"],
+  [/slime|史萊姆|果凍|黏/i,"amorphous"],
   [/ghost|鬼|靈|魂|spirit|wraith|phantom|幽/i,"floating"],
   [/bird|鳥|雀|鷹|鴉|raven|鴿|bat|蝙蝠|owl|貓頭鷹/i,"avian"],
-  [/fish|魚|鯊|shark|鯨|whale|章魚|octopus|水母|海/i,"aquatic"],
+  [/fish|魚|鯊|shark|鯨|whale|水母|jellyfish|海|octopus|章魚/i,"aquatic"],
   [/bug|蟲|insect|蜂|bee|蝶|butterfly|蛾|moth|蜘蛛|spider|甲蟲|beetle|蟻|ant/i,"insectoid"],
   [/dragon|龍|snake|蛇|serpent|蟒/i,"serpentine"],
   [/cat|貓|喵|dog|狗|犬|wolf|狼|fox|狐|兔|rabbit|馬|horse|獅|lion|虎|tiger|豹|熊|bear|鹿|deer/i,"quadruped"],
   [/human|人|knight|武士|俠|robot|機器人|機械人|bot|android|goblin|哥布林|orc|獸人/i,"bipedal"]
 ];
 function speciesOf(t){ if(!t) return null; for(var i=0;i<SPECIES_KW.length;i++){ if(SPECIES_KW[i][0].test(t)) return SPECIES_KW[i][1]; } return null; }
+/* 由文字搵物種；搵唔到就由 seed 穩定咁揀返該族一隻（同一文字永遠同一隻） */
+function resolveSpecies(text,famKey,seed){
+  const hit=speciesOfText(text);
+  if(hit){
+    /* 物種層行先：佢話邊族就邊族（例如「騎士」只有物種層認得） */
+    if(famKey===null||hit.fam===famKey) return hit;
+  }
+  if(famKey===null) return null;
+  const pool=SPECIES.filter(s=>s.fam===famKey);
+  return pool[seed%pool.length]||null;
+}
+
+/* ============ 物種形態層（SPECIES LAYER）============
+   族（family）定身體藍圖；物種（species）喺骨架之上加外形細節：
+   耳朵、尾、盔甲、武器、翼、角……打「騎士」出真騎士，打「貓」出真貓。
+   族繪製時會記低 ANCH 錨點（頭／身／尾座標），裝飾函數跟錨點對位。 */
+let ANCH={}; /* 每帧由族繪製器填：hx,hy=頭；bx,by,bw,bh=身體；tx,ty=尾根 */
+const SPDEC={ /* 每個物種嘅細節繪製函數：喺族骨架畫好之後疊上去 */
+  /* --- quadruped：耳／尾／紋／角（頭喺兩側，sym 鏡像）--- */
+  cat(){ sym(ANCH.hx-1,ANCH.hy-2,2,3,P.main); },                              // 三角耳
+  dog(){ sym(ANCH.hx-2,ANCH.hy+1,2,4,P.deep); solo(ANCH.tx,ANCH.ty-2,2,2,P.deep); }, // 垂耳＋翹尾尖
+  wolf(){ sym(ANCH.hx-1,ANCH.hy-3,2,4,P.main); sym(ANCH.tx-1,ANCH.ty-2,3,2,P.deep); }, // 豎耳＋蓬尾
+  fox(){ sym(ANCH.hx-1,ANCH.hy-3,2,4,P.main); sym(ANCH.tx-2,ANCH.ty-1,4,2,"#FFF7ED"); sym(ANCH.tx-1,ANCH.ty-2,3,2,P.main); }, // 尖耳＋白尾尖
+  rabbit(){ sym(ANCH.hx+1,ANCH.hy-6,2,5,P.pale); },                           // 長耳
+  horse(){ solo(23,ANCH.hy+1,2,4,P.deep); sym(ANCH.tx-1,ANCH.ty,3,4,P.deep); }, // 鬃＋長尾
+  lion(){ solo(ANCH.hx-2,ANCH.hy-2,4,8,"#B45309"); solo(48-ANCH.hx-2,ANCH.hy-2,4,8,"#B45309"); }, // 鬃毛
+  tiger(){ solo(ANCH.bx+2,ANCH.by+1,2,2,P.deep); solo(ANCH.bx+5,ANCH.by+3,2,2,P.deep); solo(ANCH.bx+3,ANCH.by+5,2,2,P.deep); }, // 條紋
+  bear(){ sym(ANCH.hx-1,ANCH.hy-2,2,2,P.main); },                             // 圓耳
+  deer(){ solo(ANCH.hx,ANCH.hy-4,1,3,"#B45309"); solo(ANCH.hx+2,ANCH.hy-4,1,3,"#B45309"); }, // 鹿角
+  /* --- bipedal（頭喺中間上方）--- */
+  knight(){ /* 盔甲＋劍盾 */
+    solo(ANCH.hx-7,ANCH.hy-2,14,3,"#94A3B8"); solo(ANCH.hx-5,ANCH.hy+1,10,2,"#CBD5E1"); // 頭盔
+    solo(ANCH.bx-5,ANCH.by,10,ANCH.bh,"#94A3B8"); solo(ANCH.bx-3,ANCH.by+2,6,ANCH.bh-4,"#CBD5E1"); // 胸甲
+    solo(34,ANCH.by-1,3,14,"#E2E8F0"); solo(33,ANCH.by+12,5,2,"#FFD24A");    // 劍（右手外側）
+    solo(8,ANCH.by+2,5,7,"#8B5CF6"); solo(7,ANCH.by+4,2,3,"#C4B5FD");        // 盾（左手外側）
+  },
+  robot(){ solo(ANCH.hx-7,ANCH.hy-2,14,2,"#94A3B8"); solo(ANCH.hx-2,ANCH.hy-5,4,3,"#22D3EE"); // 天線
+    solo(ANCH.bx-5,ANCH.by+1,10,ANCH.bh-2,"#64748B"); solo(ANCH.bx-3,ANCH.by+3,6,3,"#22D3EE"); },
+  human(){ solo(ANCH.hx-7,ANCH.hy-2,14,2,P.deep); solo(ANCH.hx-7,ANCH.hy,2,4,P.deep); }, // 髮
+  goblin(){ sym(ANCH.hx-9,ANCH.hy+1,4,2,"#84CC16"); },                        // 尖耳
+  mage(){ solo(ANCH.hx-8,ANCH.hy-4,16,2,"#7C3AED"); solo(ANCH.hx-6,ANCH.hy-2,12,2,"#7C3AED"); solo(ANCH.hx-4,ANCH.hy,8,2,"#7C3AED"); // 尖帽
+    solo(35,ANCH.by,2,12,"#8B5CF6"); solo(33,ANCH.by+11,6,3,"#C4B5FD"); },   // 法杖
+  ninja(){ solo(ANCH.hx-6,ANCH.hy+1,12,3,"#1E293B"); },                       // 面罩
+  /* --- serpentine（頭上）--- */
+  dragon(){ solo(ANCH.hx-1,ANCH.hy-3,1,3,"#FBBF24"); solo(ANCH.hx+4,ANCH.hy-3,1,3,"#FBBF24"); // 角
+    for(let i=1;i<5;i++){ solo(22,10+i*6,4,2,"#DC2626"); }                    // 背鰭
+    sym(13,20,4,2,"#DC2626"); },                                              // 小翼
+  /* --- avian --- */
+  bat(){ sym(ANCH.bx-11,ANCH.by-1,8,3,"#6B21A8"); sym(ANCH.hx-2,ANCH.hy-3,3,2,"#6B21A8"); }, // 膜翼＋耳
+  /* --- aquatic --- */
+  shark(){ solo(ANCH.bx+1,ANCH.by-3,4,3,P.deep); solo(ANCH.bx-2,ANCH.by+1,4,1,"#F8FAFC"); }, // 背鰭＋牙
+  octopus(){ for(let i=0;i<4;i++){ solo(14+i*6,ANCH.by+ANCH.bh,2,4,P.deep); } }, // 觸鬚
+  jelly(){ for(let i=0;i<5;i++){ solo(15+i*4,ANCH.by+ANCH.bh,2,5+(i%2)*3,"rgba(147,197,253,.75)"); } }, // 垂鬚
+  /* --- insectoid --- */
+  bee(){ solo(ANCH.bx-1,ANCH.by+1,3,2,"#1E293B"); solo(ANCH.bx+2,ANCH.by+3,3,2,"#1E293B"); // 黑紋
+    sym(ANCH.bx-8,ANCH.by-2,6,2,"rgba(255,255,255,.55)"); },                  // 半透翼
+  beetle(){ solo(ANCH.hx-1,ANCH.hy-3,2,3,P.deep); solo(ANCH.bx-2,ANCH.by+ANCH.bh,10,2,P.deep); }, // 犄角＋鞘翅緣
+  butterfly(){ sym(ANCH.bx-10,ANCH.by-2,8,6,"rgba(236,72,153,.85)");          // 大彩翼
+    sym(ANCH.bx-8,ANCH.by+5,6,4,"rgba(251,191,36,.85)"); },
+  spider(){}, ant(){}, slime(){}, ghost(){}
+};
+function drawSpeciesDeco(spId,f){
+  const fn=SPDEC[spId];
+  if(fn){ try{ fn(f); }catch(e){} }
+}
+const SPECIES=[ /* 物種表：id + 所屬族 + 關鍵字 */
+  /* --- quadruped 族 --- */
+  {id:"cat",     fam:"quadruped", zh:"貓", kw:/cat|貓|喵|kitten|neko/i},
+  {id:"dog",     fam:"quadruped", zh:"犬", kw:/dog|狗|犬|puppy|shiba|柴/i},
+  {id:"wolf",    fam:"quadruped", zh:"狼", kw:/wolf|狼/i},
+  {id:"fox",     fam:"quadruped", zh:"狐", kw:/fox|狐/i},
+  {id:"rabbit",  fam:"quadruped", zh:"兔", kw:/rabbit|兔|bunny|hare/i},
+  {id:"horse",   fam:"quadruped", zh:"馬", kw:/horse|馬|pony|駒|unicorn|獨角/i},
+  {id:"lion",    fam:"quadruped", zh:"獅", kw:/lion|獅/i},
+  {id:"tiger",   fam:"quadruped", zh:"虎", kw:/tiger|虎/i},
+  {id:"bear",    fam:"quadruped", zh:"熊", kw:/bear|熊/i},
+  {id:"deer",    fam:"quadruped", zh:"鹿", kw:/deer|鹿|麋/i},
+  /* --- bipedal 族 --- */
+  {id:"knight",  fam:"bipedal", zh:"騎士", kw:/knight|騎士|武士|paladin|聖騎|soldier|士兵|俠|ranger|遊俠|warrior|勇士/i},
+  {id:"robot",   fam:"bipedal", zh:"機器人", kw:/robot|機器人|機械人|bot|android|mecha|機兵/i},
+  {id:"human",   fam:"bipedal", zh:"人", kw:/human|人類|person|人$|hero|英雄|adventurer|冒險者/i},
+  {id:"goblin",  fam:"bipedal", zh:"哥布林", kw:/goblin|哥布林|orc|獸人|troll|巨魔/i},
+  {id:"mage",    fam:"bipedal", zh:"法師", kw:/mage|法師|wizard|巫師|witch|女巫|sorcer/i},
+  {id:"ninja",   fam:"bipedal", zh:"忍者", kw:/ninja|忍者|assassin|刺客|shinobi/i},
+  /* --- serpentine 族 --- */
+  {id:"dragon",  fam:"serpentine", zh:"龍", kw:/dragon|龍|wyvern|drake/i},
+  {id:"serpent", fam:"serpentine", zh:"蛇", kw:/snake|蛇|serpent|蟒|viper|蝮/i},
+  /* --- avian 族 --- */
+  {id:"bird",    fam:"avian", zh:"鳥", kw:/bird|鳥|雀|鷹|鴉|raven|鴿|owl|貓頭鷹|parrot|鸚鵡|chick|雞/i},
+  {id:"bat",     fam:"avian", zh:"蝙蝠", kw:/bat|蝙蝠/i},
+  /* --- aquatic 族 --- */
+  {id:"fish",    fam:"aquatic", zh:"魚", kw:/fish|魚|goldfish|金魚|koi|錦鯉/i},
+  {id:"shark",   fam:"aquatic", zh:"鯊魚", kw:/shark|鯊/i},
+  {id:"octopus", fam:"aquatic", zh:"章魚", kw:/octopus|章魚|squid|魷魚|kraken|海怪/i},
+  {id:"jelly",   fam:"aquatic", zh:"水母", kw:/jelly|水母/i},
+  /* --- insectoid 族 --- */
+  {id:"bee",     fam:"insectoid", zh:"蜜蜂", kw:/bee|蜂|蜜/i},
+  {id:"beetle",  fam:"insectoid", zh:"甲蟲", kw:/beetle|甲蟲|獨角仙/i},
+  {id:"butterfly",fam:"insectoid", zh:"蝶", kw:/butterfly|蝶|蛾|moth/i},
+  {id:"spider",  fam:"insectoid", zh:"蜘蛛", kw:/spider|蜘蛛/i},
+  {id:"ant",     fam:"insectoid", zh:"蟻", kw:/ant|蟻/i},
+  /* --- amorphous 族 --- */
+  {id:"slime",   fam:"amorphous", zh:"史萊姆", kw:/slime|史萊姆|blob|果凍|goo|jelly\s/i},
+  /* --- floating 族 --- */
+  {id:"ghost",   fam:"floating", zh:"幽靈", kw:/ghost|鬼|靈|魂|spirit|wraith|phantom|幽/i}
+];
+function speciesOfText(t){
+  if(!t) return null;
+  for(let i=0;i<SPECIES.length;i++){ if(SPECIES[i].kw.test(t)) return SPECIES[i]; }
+  return null;
+}
 const PRE=["咕嚕","波波","電電","熔岩","霜霜","影影","星塵","泡泡","菇菇","雷雷","Cyber","Neo","Pixel","Glitch","Astro","Mecha"];
 const SUF=["獸","精靈","蟲","龍","史萊姆","俠","喵","犬","魚","Bot","mon","ling"];
 const PLACES=["深海溝","廢棄街機","數據垃圾崗","雲上浮島","地鐵隧道","像素森林","舊伺服器房","霓虹後巷"];
@@ -573,6 +684,7 @@ function drawCreature(fam,f,N,rnd,act){
   switch(fam){
     case "bipedal":{
       const bw=12+br*2,bh=14-br*2,bx=24-bw/2+lunge,by=gY-bh-8+bob,hy=by-9+bob+lunge*.5;
+      ANCH={hx:24,hy:hy,bx:bx,by:by,bw:bw,bh:bh};
       sym(bx,by,bw/2,bh,P.main); solo(22+lunge,by+3,4,bh-6,P.belly);
       sym(17+lunge,hy,7,8,P.pale); eyes(20+lunge,26+lunge,hy+3,rnd,true);
       const ll=AIR?4:6, l1=(RUN||ATK)&&ph?1:0, l2=(RUN||ATK)&&!ph?1:0;
@@ -584,6 +696,7 @@ function drawCreature(fam,f,N,rnd,act){
       break; }
     case "quadruped":{
       const bh=10-br,bx=10+lunge,by=gY-bh-8+bob;
+      ANCH={hx:6,hy:by-4+bob,bx:bx,by:by,bw:14,bh:bh,tx:38,ty:by-2+bob};
       sym(bx,by,14,bh,P.main); solo(20+lunge,by+2,6,bh-3,P.belly);
       sym(6+lunge,by-4+bob,9,7,P.pale); eyes(9+lunge,35+lunge,by-2+bob,rnd,false);
       const lq=AIR?4:6,q1=(RUN||ATK)&&ph?1:0,q2=(RUN||ATK)&&!ph?1:0;
@@ -594,6 +707,7 @@ function drawCreature(fam,f,N,rnd,act){
       break; }
     case "serpentine":{
       const amp=REST?1:RUN?3:ATK?2:2, stp=REST?8:RUN?4:6;
+      ANCH={hx:18+lunge,hy:4+bob+(AIR?-2:0)+lunge*2};
       for(let i=0;i<6;i++){
         const yy=Math.round(8+i*stp)+(i%2===f%2?-1:0)+bob,wob=Math.round(Math.sin(i+f)*amp);
         sym(Math.min(21+wob+lunge*(i>3?1:0),27),yy,3,stp-1,i%2?P.main:P.deep);
@@ -605,6 +719,7 @@ function drawCreature(fam,f,N,rnd,act){
       break; }
     case "avian":{
       const fly=AIR||RUN, by=gY-16+bob*2-(fly?2:0)+lunge;
+      ANCH={hx:15+lunge,hy:by-7+bob,bx:19+lunge,by:by,bw:5,bh:9};
       sym(19+lunge,by,5,9,P.main); solo(22+lunge,by+2,4,5,P.belly);
       const wy=by+(fly?(ph?-6:-1):(ph?-3:1));
       sym(10+lunge,wy,9,4,P.pale);
@@ -615,6 +730,7 @@ function drawCreature(fam,f,N,rnd,act){
       break; }
     case "aquatic":{
       const by=gY-18+bob*2-(AIR?3:0);
+      ANCH={hx:19,hy:by-3,bx:15,by:by,bw:9,bh:11};
       sym(15,by,9,11,P.main); solo(20,by+3,4,5,P.belly);
       const ty=by+((f%(REST?4:2))?(REST?0:1):-1)+(ATK&&f>=3?3:0);
       sym(8,ty,7,7,P.pale); sym(24,by+4,3,4,P.deep); solo(19,by-3,3,3,P.pale);
@@ -623,6 +739,7 @@ function drawCreature(fam,f,N,rnd,act){
       break; }
     case "insectoid":{
       const by=gY-20+bob;
+      ANCH={hx:20+lunge,hy:by,bx:19+lunge,by:by+7,bw:5,bh:8};
       sym(20+lunge,by,4,6,P.deep); sym(19+lunge,by+7,5,8,P.main);
       eyes(21+lunge,25+lunge,by+1,rnd,false);
       const ly=by+15,lift=(AIR||RUN)?(ph?1:-1):0;
@@ -634,6 +751,7 @@ function drawCreature(fam,f,N,rnd,act){
     case "amorphous":{
       const sq=act==="jump"?Math.max(bob,-7):0, r=9+br-(act==="jump"?1:0)-(ATK&&f>=3?1:0);
       const yy=gY-r*2-2+bob;
+      ANCH={bx:24-r,by:yy,bw:r*2,bh:r*2,hx:20,hy:yy+3};
       sym(24-r,gY-r*2-2+bob,r,r*2,P.main);
       solo(22,yy+5+(sq?-2:0),4,3,P.belly);
       eyes(20,26,yy+6+(sq?-2:0),rnd,true);
@@ -642,6 +760,7 @@ function drawCreature(fam,f,N,rnd,act){
       break; }
     case "floating":{
       const by=10+bob*2+(act==="run"?-2:0);
+      ANCH={hx:15,hy:by,bx:15,by:by+4,bw:9,bh:12};
       sym(15,by,9,12,P.pale); solo(21,by+4,6,6,P.main);
       eyes(18,27,by+4,rnd,true);
       for(let i=0;i<4;i++){
@@ -651,10 +770,11 @@ function drawCreature(fam,f,N,rnd,act){
       if(ATK&&f>=3){ solo(31,by+2,8,2,"#FFF7CC"); solo(33,by,2,8,"#FFD24A"); }
       break; }
   }
+  if(drawCreature._sp) drawSpeciesDeco(drawCreature._sp,f);
 }
 
 /* ============ X-Ray（八族骨架）============ */
-let curFrames=[],curIdx=0,curTimer=null,curSeedStr="",curSeedNum=null,curAct="idle",curFam="bipedal",pvXray=false,lastSeed=null;
+let curFrames=[],curIdx=0,curTimer=null,curSeedStr="",curSeedNum=null,curAct="idle",curFam="bipedal",curSp=null,pvXray=false,lastSeed=null;
 const ACT_MS={idle:300,walk:320,run:150,jump:115,attack:170,rest:430};
 const ACT_N ={idle:4};
 function minN(act,base){ return act==="jump"?Math.max(base,8):act==="run"?Math.max(base,6):act==="walk"?Math.max(base,4):act==="attack"?6:ACT_N[act]||base; }
@@ -729,10 +849,13 @@ function generate(text,keep){
   const mc=seedStr.match(/#([0-9a-fA-F]{1,8})\s*$/);
   const baseTxt=mc?seedStr.slice(0,mc.index).trim():seedStr;
   const seed=mc?(parseInt(mc[1],16)>>>0):((keep&&curSeedStr===seedStr&&curSeedNum!==null)?curSeedNum:(Math.random()*4294967296)>>>0);
-  const fk=speciesOf(baseTxt)||FAMILIES[seed%FAMILIES.length].key;
+  const SP0=speciesOfText(baseTxt);                  /* 物種層先行：佢可以話埋族別 */
+  const fk=SP0?SP0.fam:(speciesOf(baseTxt)||FAMILIES[seed%FAMILIES.length].key);
   const F=FAMILIES.find(function(x){return x.key===fk;})||FAMILIES[seed%FAMILIES.length];
+  const SP=resolveSpecies(baseTxt,fk,seed);          /* 物種形態層：族內再分物種 */
+  drawCreature._sp=SP?SP.id:null;
   P=makePalette(mulberry32a(seed^0x9E3779B9));
-  curFam=F.key;
+  curFam=F.key; curSp=SP;
   const name=makeName(mulberry32a(seed^0x85EBCA6B)), lore=makeLore(mulberry32a(seed^0xC2B2AE35));
   const baseN=4+((seed>>>2)%2), N=Math.max(4,minN(curAct,baseN));
   curFrames=[];
@@ -744,7 +867,7 @@ function generate(text,keep){
     curFrames.push(oc);
   }
   document.getElementById("dexName").textContent=name;
-  document.getElementById("dexFam").textContent=F.zh;
+  document.getElementById("dexFam").textContent=(SP?SP.zh+" · ":"")+F.zh;
   document.getElementById("dexSeed").textContent="#"+seed.toString(16);
   document.getElementById("dexLore").textContent=lore;
   setBar("HP",30+(seed>>5)%70); setBar("ATK",20+(seed>>9)%80); setBar("SPD",25+(seed>>13)%75);
@@ -853,9 +976,11 @@ function buildStyles(){
     grid.appendChild(card);
     // 畫風格示範（同一隻骑士）
     const keepP=P,keepC=C;
-    const seed=fnv1a(demo),F=FAMILIES[seed%FAMILIES.length];
+    const seed=fnv1a(demo),SP0=speciesOfText(demo),fk=SP0?SP0.fam:(speciesOf(demo)||FAMILIES[seed%FAMILIES.length].key);
+    const F=FAMILIES.find(x=>x.key===fk),SP=resolveSpecies(demo,fk,seed);
     P=makePalette(mulberry32a(seed^0x9E3779B9));
     C=cv.getContext("2d");
+    drawCreature._sp=SP?SP.id:null;
     drawCreature(F.key,1,4,mulberry32a(seed),"idle");
     applyStyle(cv);
     P=keepP; C=keepC;
@@ -938,15 +1063,17 @@ function renderLibrary(){
   LIB[curTab].seeds.forEach(s=>{
     const item=document.createElement("div"); item.className="libitem";
     const cv=document.createElement("canvas"); cv.width=48; cv.height=48;
-    const seed=fnv1a(s),F=FAMILIES[seed%FAMILIES.length];
+    const seed=fnv1a(s),SP0=speciesOfText(s),fk=SP0?SP0.fam:(speciesOf(s)||FAMILIES[seed%FAMILIES.length].key);
+    const F=FAMILIES.find(x=>x.key===fk),SP=resolveSpecies(s,fk,seed);
     const keepP=P,keepC=C;
     P=makePalette(mulberry32a(seed^0x9E3779B9));
     C=cv.getContext("2d");
+    drawCreature._sp=SP?SP.id:null;
     drawCreature(F.key,0,minN("idle",2+(seed>>3)%3),mulberry32a(seed),"idle");
     applyStyle(cv);
     P=keepP; C=keepC;
     const sp=document.createElement("span"); sp.textContent=s;
-    const em=document.createElement("em"); em.textContent=F.zh;
+    const em=document.createElement("em"); em.textContent=(SP?SP.zh+" · ":"")+F.zh;
     item.appendChild(cv); item.appendChild(sp); item.appendChild(em);
     item.onclick=()=>{
       document.getElementById("seedInput").value=s;
