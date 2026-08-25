@@ -518,50 +518,69 @@ function resolveSpecies(text,famKey,seed){
 /* ============ 物種形態層（SPECIES LAYER）============
    族（family）定身體藍圖；物種（species）喺骨架之上加外形細節：
    耳朵、尾、盔甲、武器、翼、角……打「騎士」出真騎士，打「貓」出真貓。
-   族繪製時會記低 ANCH 錨點（頭／身／尾座標），裝飾函數跟錨點對位。 */
-let ANCH={}; /* 每帧由族繪製器填：hx,hy=頭；bx,by,bw,bh=身體；tx,ty=尾根 */
-const SPDEC={ /* 每個物種嘅細節繪製函數：喺族骨架畫好之後疊上去 */
-  /* --- quadruped：耳／尾／紋／角（頭喺兩側，sym 鏡像）--- */
-  cat(){ sym(ANCH.hx-1,ANCH.hy-2,2,3,P.main); },                              // 三角耳
-  dog(){ sym(ANCH.hx-2,ANCH.hy+1,2,4,P.deep); solo(ANCH.tx,ANCH.ty-2,2,2,P.deep); }, // 垂耳＋翹尾尖
-  wolf(){ sym(ANCH.hx-1,ANCH.hy-3,2,4,P.main); sym(ANCH.tx-1,ANCH.ty-2,3,2,P.deep); }, // 豎耳＋蓬尾
-  fox(){ sym(ANCH.hx-1,ANCH.hy-3,2,4,P.main); sym(ANCH.tx-2,ANCH.ty-1,4,2,"#FFF7ED"); sym(ANCH.tx-1,ANCH.ty-2,3,2,P.main); }, // 尖耳＋白尾尖
-  rabbit(){ sym(ANCH.hx+1,ANCH.hy-6,2,5,P.pale); },                           // 長耳
-  horse(){ solo(23,ANCH.hy+1,2,4,P.deep); sym(ANCH.tx-1,ANCH.ty,3,4,P.deep); }, // 鬃＋長尾
-  lion(){ solo(ANCH.hx-2,ANCH.hy-2,4,8,"#B45309"); solo(48-ANCH.hx-2,ANCH.hy-2,4,8,"#B45309"); }, // 鬃毛
-  tiger(){ solo(ANCH.bx+2,ANCH.by+1,2,2,P.deep); solo(ANCH.bx+5,ANCH.by+3,2,2,P.deep); solo(ANCH.bx+3,ANCH.by+5,2,2,P.deep); }, // 條紋
-  bear(){ sym(ANCH.hx-1,ANCH.hy-2,2,2,P.main); },                             // 圓耳
-  deer(){ solo(ANCH.hx,ANCH.hy-4,1,3,"#B45309"); solo(ANCH.hx+2,ANCH.hy-4,1,3,"#B45309"); }, // 鹿角
-  /* --- bipedal（頭喺中間上方）--- */
-  knight(){ /* 盔甲＋劍盾 */
-    solo(ANCH.hx-7,ANCH.hy-2,14,3,"#94A3B8"); solo(ANCH.hx-5,ANCH.hy+1,10,2,"#CBD5E1"); // 頭盔
-    solo(ANCH.bx-5,ANCH.by,10,ANCH.bh,"#94A3B8"); solo(ANCH.bx-3,ANCH.by+2,6,ANCH.bh-4,"#CBD5E1"); // 胸甲
-    solo(34,ANCH.by-1,3,14,"#E2E8F0"); solo(33,ANCH.by+12,5,2,"#FFD24A");    // 劍（右手外側）
-    solo(8,ANCH.by+2,5,7,"#8B5CF6"); solo(7,ANCH.by+4,2,3,"#C4B5FD");        // 盾（左手外側）
+   族繪製時記低 ANCH 錨點（hc=頭中心、spine=脊柱點、tail=尾根），裝飾跟錨點對位。 */
+const SPDEC={
+  /* --- quadruped（側面，頭 hc 喺脊柱左上方，face=1 向右）--- */
+  cat(){ const h=ANCH.hc; solo(h[0]-3,h[1]-6,2,3,P.main); solo(h[0]+1,h[1]-6,2,3,P.main); }, // 三角耳×2
+  dog(){ const h=ANCH.hc; solo(h[0]-5,h[1]-2,2,4,P.deep); },                                  // 垂耳
+  wolf(){ const h=ANCH.hc; solo(h[0]-3,h[1]-7,2,4,P.main); solo(h[0]+1,h[1]-7,2,4,P.main); }, // 豎耳
+  fox(){ const h=ANCH.hc,t=ANCH.tail; solo(h[0]-3,h[1]-7,2,4,P.main); solo(h[0]+1,h[1]-7,2,4,P.main);
+    if(t){ ln(t[0],t[1],t[0]-2,t[1]-3,3,P.main); solo(t[0]-3,t[1]-5,2,2,"#FFF7ED"); } },      // 尖耳＋白尾尖
+  rabbit(){ const h=ANCH.hc; solo(h[0]-2,h[1]-11,2,6,P.pale); solo(h[0]+2,h[1]-11,2,6,P.pale); }, // 長耳
+  horse(){ const h=ANCH.hc,sp=ANCH.spine; if(sp){ ln(h[0]-4,h[1]-2,h[0]-6,h[1]+4,2,P.deep); } // 鬃
+    const t=ANCH.tail; if(t){ ln(t[0],t[1],t[0]-2,t[1]+6,2,P.deep); } },
+  lion(){ const h=ANCH.hc; disc(h[0],h[1],6,"#B45309"); disc(h[0]+1,h[1],4,P.main); },        // 鬃毛
+  tiger(){ const sp=ANCH.spine; if(sp){ for(const i of [3,5,7]){ px(sp[i][0],sp[i][1],P.deep); px(sp[i][0],sp[i][1]+2,P.deep); } } }, // 條紋
+  bear(){ const h=ANCH.hc; disc(h[0]-3,h[1]-4,2,P.main); disc(h[0]+2,h[1]-4,2,P.main); },     // 圓耳
+  deer(){ const h=ANCH.hc; ln(h[0]-1,h[1]-5,h[0]-3,h[1]-9,1,"#B45309"); ln(h[0]+2,h[1]-5,h[0]+3,h[1]-9,1,"#B45309"); }, // 鹿角
+  /* --- bipedal（頭 hc，胸 chest，肩 sh）--- */
+  knight(){ const h=ANCH.hc,ch=ANCH.chest,sh=ANCH.sh; if(!ch) return;
+    solo(h[0]-4,h[1]-4,8,3,"#94A3B8"); solo(h[0]-2,h[1]-1,5,1,"#CBD5E1");                     // 頭盔＋眼縫
+    solo(ch[0]-3,ch[1]-2,6,9,"#94A3B8"); solo(ch[0]-2,ch[1]-1,4,7,"#CBD5E1");                 // 胸甲
+    ln(34,ch[1]-2,42,ch[1]+8,2,"#E2E8F0"); solo(33,ch[1]+7,4,2,"#FFD24A");                    // 劍
+    solo(12,ch[1],4,7,"#8B5CF6"); solo(11,ch[1]+2,2,3,"#C4B5FD");                             // 盾
   },
-  robot(){ solo(ANCH.hx-7,ANCH.hy-2,14,2,"#94A3B8"); solo(ANCH.hx-2,ANCH.hy-5,4,3,"#22D3EE"); // 天線
-    solo(ANCH.bx-5,ANCH.by+1,10,ANCH.bh-2,"#64748B"); solo(ANCH.bx-3,ANCH.by+3,6,3,"#22D3EE"); },
-  human(){ solo(ANCH.hx-7,ANCH.hy-2,14,2,P.deep); solo(ANCH.hx-7,ANCH.hy,2,4,P.deep); }, // 髮
-  goblin(){ sym(ANCH.hx-9,ANCH.hy+1,4,2,"#84CC16"); },                        // 尖耳
-  mage(){ solo(ANCH.hx-8,ANCH.hy-4,16,2,"#7C3AED"); solo(ANCH.hx-6,ANCH.hy-2,12,2,"#7C3AED"); solo(ANCH.hx-4,ANCH.hy,8,2,"#7C3AED"); // 尖帽
-    solo(35,ANCH.by,2,12,"#8B5CF6"); solo(33,ANCH.by+11,6,3,"#C4B5FD"); },   // 法杖
-  ninja(){ solo(ANCH.hx-6,ANCH.hy+1,12,3,"#1E293B"); },                       // 面罩
-  /* --- serpentine（頭上）--- */
-  dragon(){ solo(ANCH.hx-1,ANCH.hy-3,1,3,"#FBBF24"); solo(ANCH.hx+4,ANCH.hy-3,1,3,"#FBBF24"); // 角
-    for(let i=1;i<5;i++){ solo(22,10+i*6,4,2,"#DC2626"); }                    // 背鰭
-    sym(13,20,4,2,"#DC2626"); },                                              // 小翼
+  robot(){ const h=ANCH.hc,ch=ANCH.chest; if(!ch) return;
+    solo(h[0]-4,h[1]-4,8,2,"#94A3B8"); ln(h[0],h[1]-5,h[0],h[1]-8,1,"#94A3B8"); px(h[0],h[1]-8,"#22D3EE"); // 天線
+    solo(ch[0]-3,ch[1]-1,6,7,"#64748B"); solo(ch[0]-2,ch[1]+1,4,3,"#22D3EE"); },
+  human(){ const h=ANCH.hc; if(!h) return; solo(h[0]-4,h[1]-4,6,2,P.deep); solo(h[0]-4,h[1]-2,2,4,P.deep); }, // 髮
+  goblin(){ const h=ANCH.hc; if(!h) return; solo(h[0]-6,h[1]-1,3,2,"#84CC16"); px(h[0]-7,h[1],"#84CC16"); }, // 尖耳
+  mage(){ const h=ANCH.hc,ch=ANCH.chest; if(!h) return;
+    solo(h[0]-5,h[1]-5,10,2,"#7C3AED"); solo(h[0]-4,h[1]-3,8,2,"#7C3AED"); solo(h[0]-2,h[1]-1,5,2,"#7C3AED"); // 尖帽
+    if(ch){ ln(33,ch[1]-2,33,ch[1]+10,1,"#8B5CF6"); disc(33,ch[1]+11,2,"#C4B5FD"); } },       // 法杖
+  ninja(){ const h=ANCH.hc; if(!h) return; solo(h[0]-4,h[1]-4,8,3,"#1E293B"); px(h[0]+2,h[1]-1,"#E2E8F0"); }, // 面罩露眼
+  /* --- serpentine --- */
+  dragon(){ const h=ANCH.hc,sp=ANCH.spine; if(!h) return;
+    ln(h[0]-1,h[1]-3,h[0]-3,h[1]-6,1,"#FBBF24"); ln(h[0]+2,h[1]-3,h[0]+3,h[1]-6,1,"#FBBF24"); // 角
+    if(sp){ for(let i=2;i<8;i+=2){ px(sp[i][0],sp[i][1]-4,"#DC2626"); px(sp[i][0],sp[i][1]-3,"#DC2626"); } // 背鰭
+      const w=sp[5]; ln(w[0]-2,w[1],w[0]-7,w[1]-4,2,"#DC2626"); } },                          // 小翼
   /* --- avian --- */
-  bat(){ sym(ANCH.bx-11,ANCH.by-1,8,3,"#6B21A8"); sym(ANCH.hx-2,ANCH.hy-3,3,2,"#6B21A8"); }, // 膜翼＋耳
+  bat(){ const h=ANCH.hc,b=ANCH.body,w=ANCH.wsh; if(!b) return;
+    ln(b[0]-6,b[1]-2,b[0]-13,b[1]+2,2,"#6B21A8"); ln(b[0]-13,b[1]+2,b[0]-15,b[1]+7,1,"#6B21A8"); // 膜翼
+    if(h){ solo(h[0]-2,h[1]-6,1,3,"#6B21A8"); solo(h[0]+2,h[1]-6,1,3,"#6B21A8"); } },         // 耳
   /* --- aquatic --- */
-  shark(){ solo(ANCH.bx+1,ANCH.by-3,4,3,P.deep); solo(ANCH.bx-2,ANCH.by+1,4,1,"#F8FAFC"); }, // 背鰭＋牙
-  octopus(){ for(let i=0;i<4;i++){ solo(14+i*6,ANCH.by+ANCH.bh,2,4,P.deep); } }, // 觸鬚
-  jelly(){ for(let i=0;i<5;i++){ solo(15+i*4,ANCH.by+ANCH.bh,2,5+(i%2)*3,"rgba(147,197,253,.75)"); } }, // 垂鬚
+  shark(){ const sp=ANCH.spine; if(!sp) return; const m=sp[2];
+    ln(m[0],m[1]-3,m[0]+2,m[1]-7,2,P.deep); ln(m[0]+2,m[1]-7,m[0]+4,m[1]-3,2,P.deep);         // 背鰭
+    solo(sp[0][0]+3,sp[0][1]+2,3,1,"#F8FAFC"); },                                             // 牙
+  octopus(){ const b=ANCH.body; if(!b) return;
+    for(let i=0;i<4;i++){ ln(b[0]-6+i*4,b[1]+6,b[0]-7+i*4,b[1]+12,2,P.deep); } },             // 觸鬚
+  jelly(){ const b=ANCH.body; if(!b) return;
+    for(let i=0;i<5;i++){ ln(b[0]-8+i*4,b[1]+8,b[0]-8+i*4,b[1]+14+(i%2)*3,1,"rgba(147,197,253,.75)"); } }, // 垂鬚
   /* --- insectoid --- */
-  bee(){ solo(ANCH.bx-1,ANCH.by+1,3,2,"#1E293B"); solo(ANCH.bx+2,ANCH.by+3,3,2,"#1E293B"); // 黑紋
-    sym(ANCH.bx-8,ANCH.by-2,6,2,"rgba(255,255,255,.55)"); },                  // 半透翼
-  beetle(){ solo(ANCH.hx-1,ANCH.hy-3,2,3,P.deep); solo(ANCH.bx-2,ANCH.by+ANCH.bh,10,2,P.deep); }, // 犄角＋鞘翅緣
-  butterfly(){ sym(ANCH.bx-10,ANCH.by-2,8,6,"rgba(236,72,153,.85)");          // 大彩翼
-    sym(ANCH.bx-8,ANCH.by+5,6,4,"rgba(251,191,36,.85)"); },
+  bee(){ const b=ANCH.body; if(!b) return;
+    ln(b[0]-3,b[1]-5,b[0]-3,b[1]+5,2,"#1E293B"); ln(b[0]+2,b[1]-6,b[0]+2,b[1]+6,2,"#1E293B"); // 黑紋
+    ln(b[0]-4,b[1]-8,b[0]-10,b[1]-12,1,"rgba(255,255,255,.55)");                              // 翼
+    ln(b[0]+1,b[1]-8,b[0]-4,b[1]-13,1,"rgba(255,255,255,.55)"); },
+  beetle(){ const h=ANCH.hc,b=ANCH.body; if(!h) return;
+    ln(h[0]+2,h[1]-3,h[0]+7,h[1]-5,2,P.deep);                                                 // 犄角
+    if(b){ ln(b[0]-6,b[1],b[0]+6,b[1],1,P.deep); } },                                         // 鞘翅縫
+  butterfly(){ const b=ANCH.body; if(!b) return;
+    C.fillStyle="rgba(236,72,153,.85)";
+    C.beginPath(); C.ellipse(b[0]-7,b[1]-6,6,4,Math.PI/4,0,7); C.fill();
+    C.beginPath(); C.ellipse(b[0]+7,b[1]-6,6,4,-Math.PI/4,0,7); C.fill();
+    C.fillStyle="rgba(251,191,36,.85)";
+    C.beginPath(); C.ellipse(b[0]-6,b[1]+3,5,3,Math.PI/4,0,7); C.fill();
+    C.beginPath(); C.ellipse(b[0]+6,b[1]+3,5,3,-Math.PI/4,0,7); C.fill(); },                  // 大彩翼
   spider(){}, ant(){}, slime(){}, ghost(){}
 };
 function drawSpeciesDeco(spId,f){
@@ -648,197 +667,339 @@ function applyStyle(cv){
   cx.putImageData(im,0,0);
 }
 
-/* ============ 角色繪製引擎（八族 × 六動作）============ */
+/* ============ 角色繪製引擎 v2：側面 FK 骨架（對齊 showreel 水準）============
+   同 Python 生成器同一套數學：正向運動學（FK）由關節角度算出每段骨嘅位置，
+   步態用正弦驅動，遠側肢體調暗（0.62），16 帧無縫循環。 */
 let P;
 function makePalette(rnd){
   const hue=Math.floor(rnd()*360), sat=55+Math.floor(rnd()*35), shift=Math.floor(rnd()*30)-15;
-  return { main:"hsl("+hue+","+sat+"%,55%)", deep:"hsl("+(hue+shift)+","+sat+"%,38%)",
-    pale:"hsl("+(hue+shift)+","+sat+"%,72%)",
-    belly:"hsl("+((hue+180)%360)+","+Math.max(sat-20,20)+"%,85%)", eye:"#FFFFFF", pupil:"#0F172A" };
+  const hsl=(h,s,l)=>"hsl("+((h%360)+360)%360+","+s+"%,"+l+"%)";
+  return { main:hsl(hue,sat,55), deep:hsl(hue+shift,sat,38), pale:hsl(hue+shift,sat,72),
+    belly:hsl(hue+180,Math.max(sat-20,20),85), far:hsl(hue+shift,sat,26),
+    eye:"#FFFFFF", pupil:"#0F172A" };
 }
 let C;
+/* --- PIL 風格硬像素基元 --- */
+function px(x,y,col){ C.fillStyle=col; C.fillRect(x|0,y|0,1,1); }
 function solo(x,y,w,h,col){ C.fillStyle=col; C.fillRect(Math.round(x),Math.round(y),w,h); }
-function sym(x,y,w,h,col){ C.fillStyle=col; C.fillRect(Math.round(x),y,w,h); C.fillRect(Math.round(48-x-w),y,w,h); }
-function eyes(x1,x2,y,rnd,big){
+function ln(x0,y0,x1,y1,w,col){ /* 粗線：沿 Bresenham 打 w×w 方塊 */
+  x0=Math.round(x0); y0=Math.round(y0); x1=Math.round(x1); y1=Math.round(y1);
+  const dx=Math.abs(x1-x0), dy=Math.abs(y1-y0), sx=x0<x1?1:-1, sy=y0<y1?1:-1;
+  let err=dx-dy, x=x0, y=y0, guard=0;
+  for(;;){
+    C.fillStyle=col; C.fillRect(x-(w>>1),y-(w>>1),w,w);
+    if((x===x1&&y===y1)||++guard>200) break;
+    const e2=2*err;
+    if(e2>-dy){ err-=dy; x+=sx; }
+    if(e2<dx){ err+=dx; y+=sy; }
+  }
+}
+function disc(cx,cy,r,col){ /* 實心圓 */
+  cx=Math.round(cx); cy=Math.round(cy);
+  for(let y=-r;y<=r;y++)for(let x=-r;x<=r;x++){ if(x*x+y*y<=r*r+r*0.6) px(cx+x,cy+y,col); }
+}
+function fkX(p0,ang,len){ return [p0[0]+Math.sin(ang)*len, p0[1]+Math.cos(ang)*len]; }
+function deg(d){ return d*Math.PI/180; }
+function eyesSide(hx,hy,rnd,flip){ /* 側面單眼（面向右） */
   if(drawCreature._blink) return;
-  const w=big?3:2;
-  solo(x1,y,w,w,P.eye); solo(x2,y,w,w,P.eye);
-  solo(x1+(big?1:0)+(rnd()<0.5?0:1),y+1,1,1,P.pupil);
-  solo(x2+(big?1:0)+(rnd()<0.5?0:1),y+1,1,1,P.pupil);
+  const ex=hx+(flip?-1:2), ey=hy;
+  px(ex,ey,P.eye); px(ex,ey+1,P.pupil);
 }
-function slash(){ /* 攻擊斬擊特效：白金色斜線 */ 
-  solo(30,10,2,10,"#FFF7CC"); solo(32,12,2,10,"#FFD24A"); solo(28,8,2,6,"#FFFFFF");
-}
+let ANCH={};
+function drawSpeciesDeco(spId,f){ const fn=SPDEC[spId]; if(fn){ try{ fn(f); }catch(e){} } }
+function slash(){ ln(31,10,38,20,2,"#FFF7CC"); ln(33,12,40,22,1,"#FFD24A"); }
+
 function drawCreature(fam,f,N,rnd,act){
-  act=act||"idle";
-  const ph=f%2, t=f/N;
+  act=act||"walk";
   drawCreature._blink=false;
-  let bob=0, br=ph, gY=44, lunge=0;
-  if(act==="idle"){ bob=[0,-1,-1,0][f%4]; drawCreature._blink=(f===N-1); }
-  else if(act==="walk"){ bob=f<N/2?-1:0; }
-  else if(act==="run"){ bob=-Math.round(Math.abs(Math.sin(t*Math.PI*2))*3); }
-  else if(act==="jump"){ bob=-Math.round(Math.sin(Math.PI*t)*7); }
+  const t=f/N, a=t*Math.PI*2; /* 循環相位 */
+  let bob=0, lunge=0, hop=0;
+  if(act==="idle"){ bob=Math.round(0.9*Math.cos(a)); drawCreature._blink=(f===N-1); }
+  else if(act==="walk"){ bob=Math.round(0.9*Math.abs(Math.cos(a))); }
+  else if(act==="run"){ bob=-Math.round(1.4*Math.abs(Math.sin(a))); hop=Math.round(1.5*Math.max(0,Math.sin(a))); }
+  else if(act==="jump"){ hop=-Math.round(Math.sin(Math.PI*t)*8); }
   else if(act==="attack"){ lunge=[-1,-1,0,2,2,0][f%6]; bob=(f>=3&&f<=4)?-1:0; }
-  else { bob=(f%4<1)?-1:0; }
-  const AIR=act==="jump"&&bob<=-3, RUN=act==="run", REST=act==="rest", ATK=act==="attack";
-  switch(fam){
-    case "bipedal":{
-      const bw=12+br*2,bh=14-br*2,bx=24-bw/2+lunge,by=gY-bh-8+bob,hy=by-9+bob+lunge*.5;
-      ANCH={hx:24,hy:hy,bx:bx,by:by,bw:bw,bh:bh};
-      sym(bx,by,bw/2,bh,P.main); solo(22+lunge,by+3,4,bh-6,P.belly);
-      sym(17+lunge,hy,7,8,P.pale); eyes(20+lunge,26+lunge,hy+3,rnd,true);
-      const ll=AIR?4:6, l1=(RUN||ATK)&&ph?1:0, l2=(RUN||ATK)&&!ph?1:0;
-      solo(bx-3,gY-ll-l1,3,ll,P.deep); solo(48-bx,gY-ll-l2,3,ll,P.deep);
-      const al=AIR?5:8, ay=by+4+(AIR?-3:0);
-      if(RUN||ATK){ solo(bx-4+lunge*(ATK?2:1),ay+(ph?-2:2),3,al,P.deep); solo(47-bx-lunge*(ATK?2:1),ay+(ph?2:-2),3,al,P.deep); }
-      else sym(bx-4,ay,3,al,P.deep);
-      if(ATK&&f>=3) slash();
-      break; }
-    case "quadruped":{
-      const bh=10-br,bx=10+lunge,by=gY-bh-8+bob;
-      ANCH={hx:6,hy:by-4+bob,bx:bx,by:by,bw:14,bh:bh,tx:38,ty:by-2+bob};
-      sym(bx,by,14,bh,P.main); solo(20+lunge,by+2,6,bh-3,P.belly);
-      sym(6+lunge,by-4+bob,9,7,P.pale); eyes(9+lunge,35+lunge,by-2+bob,rnd,false);
-      const lq=AIR?4:6,q1=(RUN||ATK)&&ph?1:0,q2=(RUN||ATK)&&!ph?1:0;
-      solo(bx+1,gY-lq-q1,3,lq,P.deep); solo(34+lunge,gY-lq-q2,3,lq,P.deep);
-      solo(bx+9,gY-lq-q2,3,lq,P.deep); solo(26+lunge,gY-lq-q1,3,lq,P.deep);
-      sym(38+lunge,by-2+bob,3,3,P.main);
-      if(ATK&&f>=3) slash();
-      break; }
-    case "serpentine":{
-      const amp=REST?1:RUN?3:ATK?2:2, stp=REST?8:RUN?4:6;
-      ANCH={hx:18+lunge,hy:4+bob+(AIR?-2:0)+lunge*2};
-      for(let i=0;i<6;i++){
-        const yy=Math.round(8+i*stp)+(i%2===f%2?-1:0)+bob,wob=Math.round(Math.sin(i+f)*amp);
-        sym(Math.min(21+wob+lunge*(i>3?1:0),27),yy,3,stp-1,i%2?P.main:P.deep);
+  else { bob=(f%4<1)?-1:0; } /* rest */
+  const RUN=act==="run", REST=act==="rest", AIR=act==="jump", ATK=act==="attack";
+  const G=44; /* 地面 */
+  const s=Math.sin(a), c=Math.cos(a);
+  const spd=RUN?1.6:1; /* 步幅倍率 */
+
+  /* ===== bipedal：髖→大腿→小腿＋脊柱→頭＋雙臂（側面，面向右） ===== */
+  if(fam==="bipedal"){
+    const L_TH=8, L_SH=8, L_UA=6, L_FA=5;
+    const hipY=G-(L_TH+L_SH)-hop+bob;
+    const hip=[24,hipY], chest=[hip[0]+1.5,hip[1]-9], sh=[chest[0],chest[1]+2];
+    const ATKarm=ATK?deg(100):0;
+    const FARF=P.far;
+    function leg(th,kn,pal){
+      const j=fkX(hip,th,L_TH), e=fkX(j,th-kn,L_SH);
+      ln(hip[0],hip[1],j[0],j[1],3,pal.main); ln(j[0],j[1],e[0],e[1],3,pal.deep);
+      ln(e[0],e[1],e[0]+3,e[1]+0.6,2,pal.far||pal.main);
+      return e;
+    }
+    function arm(a0,el,pal){
+      const j=fkX(sh,a0+(ATK?ATKarm:0),L_UA), e=fkX(j,a0+(ATK?ATKarm:0)-el,L_FA);
+      ln(sh[0],sh[1],j[0],j[1],2,pal.main); ln(j[0],j[1],e[0],e[1],2,pal.main);
+      disc(e[0],e[1],1,pal.pale||pal.main);
+      return e;
+    }
+    /* 步態：近腿相位 a，遠腿 a+π；膝喺擺動相屈；手臂反相擺 */
+    const swN=Math.max(0,Math.sin(a-0.35)), swF=Math.max(0,Math.sin(a-0.35+Math.PI));
+    const FARPAL={main:FARF,deep:FARF,far:FARF,pale:FARF};
+    const NEARPAL={main:P.main,deep:P.deep,far:P.far,pale:P.pale};
+    arm(deg(24)*s*spd,deg(16),FARPAL);                 /* 遠臂（同近腿反相） */
+    leg(-deg(26)*s*spd,deg(55)*swF,FARPAL);            /* 遠腿 */
+    ln(hip[0],hip[1],chest[0],chest[1],4,P.main); /* 脊柱 */
+    solo(chest[0]-2,chest[1]-1,4,7,P.belly);      /* 胸口 */
+    leg(deg(26)*s*spd,deg(55)*swN,NEARPAL);            /* 近腿 */
+    arm(-deg(24)*s*spd,deg(16)+deg(14)*Math.max(0,s),NEARPAL); /* 近臂 */
+    const hc=[chest[0]+2,chest[1]-6];
+    disc(hc[0],hc[1],4,P.pale);                     /* 頭 */
+    solo(hc[0]-4,hc[1]-4,5,3,P.main);               /* 髮 */
+    eyesSide(hc[0],hc[1]-1,rnd);
+    if(ATK&&f>=3){ ln(30,chest[1]-2,42,chest[1]+8,2,"#E2E8F0"); solo(28,chest[1]+7,4,2,"#FFD24A"); }
+    ANCH={hc:hc,hip:hip,chest:chest,sh:sh,face:1};
+  }
+  /* ===== quadruped：脊柱水平＋四腿 FK＋頸頭尾（側面 trot） ===== */
+  else if(fam==="quadruped"){
+    const L_UP=7, L_LO=7;
+    const spineY=G-16-hop+bob, shX=17, hipX=31;
+    const sh=[shX,spineY], hp=[hipX,spineY];
+    const trot=Math.sin(a);
+    const wag=Math.sin(a*2);
+    const FARF=P.far;
+    function qleg(bx,up,lo,pal){
+      const j=fkX([bx,spineY],up,L_UP), e=fkX(j,up-lo,L_LO);
+      ln(bx,spineY,j[0],j[1],3,pal.main); ln(j[0],j[1],e[0],e[1],3,pal.deep);
+      ln(e[0],e[1],e[0]+3,e[1],2,pal.far);
+    }
+    const upN=deg(22)*trot*spd, loN=deg(38)*Math.max(0,Math.sin(a-0.5));
+    const upF=-deg(22)*trot*spd, loF=deg(38)*Math.max(0,Math.sin(a-0.5+Math.PI));
+    qleg(shX,upF,loF,{main:FARF,deep:FARF,far:FARF});  /* 遠前 */
+    qleg(hipX,upN,loN,{main:FARF,deep:FARF,far:FARF}); /* 近後（對角組） */
+    /* 尾 */
+    const t0=[hipX-1,spineY-1];
+    const t1=fkX(t0,deg(140)+deg(18)*wag,5), t2=fkX(t1,deg(150)+deg(18)*wag+deg(20)*wag,4);
+    ln(t0[0],t0[1],t1[0],t1[1],2,P.main); ln(t1[0],t1[1],t2[0],t2[1],2,P.deep); disc(t2[0],t2[1],1,P.main);
+    ln(sh[0],sh[1],hp[0],hp[1],5,P.main); /* 脊柱 */
+    solo(shX+3,spineY+1,hipX-shX-4,3,P.belly); /* 肚 */
+    qleg(shX,upN,loN,{main:P.main,deep:P.deep,far:P.far});  /* 近前 */
+    qleg(hipX,upF,loF,{main:P.main,deep:P.deep,far:P.far}); /* 遠後 */
+    /* 頭頸 */
+    const hx=shX+7, hy=spineY-7+deg(6)*s*4;
+    ln(shX,spineY-2,hx-2,hy+3,3,P.main);
+    disc(hx,hy,4,P.main);
+    solo(hx+2,hy-1,4,2,P.deep); px(hx+6,hy,P.pupil); /* 吻＋鼻 */
+    eyesSide(hx,hy-1,rnd);
+    if(ATK&&f>=3) slash();
+    ANCH={hc:[hx,hy],spine:[sh,hp],tail:t0,face:1};
+  }
+  /* ===== serpentine：行進正弦波沿 12 點脊柱 ===== */
+  else if(fam==="serpentine"){
+    const NPTS=12, DXC=3.2, AMP=REST?2.5:RUN?6:4.5, K=0.55, CY=26-hop;
+    const pts=[];
+    for(let i=0;i<NPTS;i++){
+      const fx=i/(NPTS-1);
+      pts.push([6+i*DXC, CY+AMP*Math.sin(i*K-a)*(0.55+0.45*fx)]);
+    }
+    for(let i=0;i<NPTS-1;i++){
+      const tt=i/(NPTS-1), w=Math.max(1,Math.round(5*(1-0.6*tt)));
+      ln(pts[i][0],pts[i][1],pts[i+1][0],pts[i+1][1],w,tt>0.3?P.main:P.deep);
+    }
+    /* 背紋 */
+    for(let j=2;j<NPTS-2;j+=2) px(pts[j][0],pts[j][1],P.deep);
+    /* 頭 */
+    const hd=pts[NPTS-1], d2=[hd[0]+3,hd[1]];
+    ln(hd[0],hd[1],d2[0],d2[1],4,P.main);
+    disc(d2[0],d2[1],3,P.main);
+    px(d2[0]+3,d2[1]-1,P.pupil);
+    if(f%8<2){ ln(d2[0]+4,d2[1],d2[0]+8,d2[1]-1,1,"#DC2626"); px(d2[0]+8,d2[1]-1,"#DC2626"); }
+    if(ATK&&f>=3){ ln(d2[0]+6,d2[1]-4,d2[0]+12,d2[1]+2,2,"#FFF7CC"); }
+    ANCH={hc:d2,spine:pts,face:1};
+  }
+  /* ===== avian：兩節翼 FK 拍動＋身體反浮 ===== */
+  else if(fam==="avian"){
+    const CXB=21, CYB=22-hop*0.5+bob*0.5;
+    const flap=deg(46)*s*(RUN?1.3:1), eb=deg(28)+deg(12)*Math.max(0,s);
+    const WSH=[17,CYB-4], L1=7, L2=7, FARF=P.far;
+    function wing(col){
+      const e=fkX(WSH,-deg(90)+flap,L1), tt=fkX(e,-deg(90)+flap+eb,L2);
+      ln(WSH[0],WSH[1],e[0],e[1],3,col); ln(e[0],e[1],tt[0],tt[1],2,col);
+    }
+    wing(FARF);
+    disc(CXB,CYB,8,P.main); solo(CXB-4,CYB+1,9,4,P.belly);
+    /* 尾羽 */
+    const t0=[CXB-8,CYB-1];
+    for(const k of [-2,0,2]){
+      const q=fkX(t0,deg(180+k*8)+deg(6)*s,7);
+      ln(t0[0],t0[1],q[0],q[1],1,P.deep);
+    }
+    /* 頭頸喙 */
+    const hc=[29,CYB-8+bob*0.5];
+    ln(CXB+4,CYB-4,hc[0],hc[1]+3,3,P.main);
+    disc(hc[0],hc[1],4,P.main);
+    solo(hc[0]+3,hc[1]-1,5,2,"#F59E0B"); /* 喙 */
+    eyesSide(hc[0]+1,hc[1]-1,rnd);
+    wing(P.main);
+    /* 腳 */
+    const legY=CYB+6;
+    ln(CXB-2,legY,CXB-3+1.2*s,legY+5,1,P.deep); ln(CXB-3+1.2*s,legY+5,CXB-1.5+1.2*s,legY+9,1,"#F59E0B");
+    ln(CXB+3,legY,CXB+2+1.2*s,legY+5,1,P.deep); ln(CXB+2+1.2*s,legY+5,CXB+4.5+1.2*s,legY+9,1,"#F59E0B");
+    if(ATK&&f>=3){ ln(33,CYB-2,42,CYB+4,2,"#FFF7CC"); }
+    ANCH={hc:hc,body:[CXB,CYB],wsh:WSH,face:1};
+  }
+  /* ===== aquatic：行進波＋尾鰭掃動 ===== */
+  else if(fam==="aquatic"){
+    const NPTS=9, CY=24-hop*0.5;
+    const pts=[];
+    for(let j=0;j<NPTS;j++){
+      const tt=j/(NPTS-1);
+      pts.push([12+tt*24, CY+(0.8+3.4*Math.pow(tt,1.4))*Math.sin(j*0.95-a)]);
+    }
+    /* 尾鰭 */
+    const tx=pts[8][0], ty=pts[8][1], dxp=tx-pts[7][0], dyp=ty-pts[7][1];
+    const l2=Math.hypot(dxp,dyp)||1, ux=dxp/l2, uy=dyp/l2, sp7=7;
+    C.fillStyle=P.deep; C.beginPath();
+    C.moveTo(pts[8][0],pts[8][1]);
+    C.lineTo(tx+ux*9-uy*sp7,ty+uy*9+ux*sp7); C.lineTo(tx+ux*11,ty+uy*11);
+    C.lineTo(tx+ux*9+uy*sp7,ty+uy*9-ux*sp7); C.closePath(); C.fill();
+    /* 身軀 */
+    for(let i=0;i<NPTS-1;i++){
+      const tt=i/(NPTS-1), w=Math.max(2,Math.round(8*(1-0.72*tt)));
+      ln(pts[i][0],pts[i][1],pts[i+1][0],pts[i+1][1],w,tt<0.18?P.deep:P.main);
+    }
+    /* 背鰭＋胸鰭 */
+    const mp=pts[4], dh=2*Math.sin(a+1.2);
+    C.fillStyle=P.pale; C.beginPath();
+    C.moveTo(mp[0]-3,mp[1]-3); C.lineTo(mp[0]+3,mp[1]-3); C.lineTo(mp[0]+dh,mp[1]-7);
+    C.closePath(); C.fill();
+    const pp=pts[1], pf=fkX(pp,deg(120)+deg(18)*Math.sin(a),5);
+    ln(pp[0],pp[1],pf[0],pf[1],1,P.pale);
+    solo(pts[0][0],pts[0][1]+2,5,1,P.belly);
+    px(pts[0][0]+1,pts[0][1]-1,P.pupil);
+    if(ATK&&f>=3) slash();
+    ANCH={hc:pts[0],spine:pts,face:1};
+  }
+  /* ===== insectoid：三腳架步態六腿＋分節殼 ===== */
+  else if(fam==="insectoid"){
+    const CY2=30-hop+bob*0.5, GY=42;
+    const FARF=P.far;
+    function bleg(hx,off,pal){
+      const sw2=deg(16)*Math.sin(a+off), lift=Math.max(0,Math.sin(a+off))*2;
+      const hip=[hx,CY2+8], kn=fkX(hip,deg(90)+sw2,4);
+      const ft=[kn[0]+(hx<26?2:-2)+sw2*4,GY-lift];
+      ln(hip[0],hip[1],kn[0],kn[1],2,pal.main); ln(kn[0],kn[1],ft[0],ft[1],1,pal.deep);
+    }
+    /* 遠側三腿 */
+    for(let k=0;k<3;k++){ const hx=15+k*8; bleg(hx+1,(k%2?0:Math.PI),{main:FARF,deep:FARF}); }
+    /* 頭 */
+    const hd=[37,CY2-1];
+    disc(hd[0],hd[1],4,P.main);
+    /* 觸鬚 */
+    for(const k of [0,1]){
+      const tip=fkX(hd,deg(-62+k*14)+deg(6)*Math.sin(a*2+k),8);
+      ln(hd[0]+2,hd[1]-2,tip[0],tip[1],1,P.deep);
+    }
+    px(hd[0]+3,hd[1]-1,P.pupil);
+    /* 殼 */
+    const shy=CY2-2;
+    disc(25,shy,8,P.main);
+    solo(18,shy-7,14,14,""); /* noop keep shape */
+    ln(19,shy-7,19,shy+7,1,P.deep); ln(27,shy-7,27,shy+7,1,P.deep);
+    solo(17,shy+4,16,3,P.belly);
+    /* 近側三腿 */
+    for(let k=0;k<3;k++){ const hx=15+k*8; bleg(hx,(k%2?Math.PI:0),{main:P.main,deep:P.deep}); }
+    if(ATK&&f>=3) slash();
+    ANCH={hc:hd,body:[25,shy],face:1};
+  }
+  /* ===== amorphous：squash & stretch 跳躍 blob（半圓頂，同 Python 原版一致）===== */
+  else if(fam==="amorphous"){
+    const hop2=Math.max(0,Math.sin(a)), h2=hop2*8+(AIR?5:0);
+    const sx2=1+0.18*(1-hop2)*c-0.12*hop2, sy2=2-sx2;
+    const cx2=24, bottom=42-h2, rx=10*sx2, ry=15*sy2; /* ry=可見高度 */
+    for(let y=Math.max(0,Math.round(bottom-ry*2));y<=Math.min(48,Math.round(bottom));y++){
+      for(let x=Math.max(0,Math.round(cx2-rx));x<=Math.min(48,Math.round(cx2+rx));x++){
+        const nx=(x-cx2)/rx, ny=(bottom-y)/ry, v=nx*nx+ny*ny;
+        if(v<=1.0){
+          const edge=v>0.72, lowband=ny<-0.35;
+          px(x,y,edge?P.deep:(lowband?P.main:P.pale));
+        }
       }
-      const hy=4+bob+(AIR?-2:0)+lunge*2;
-      sym(18+lunge,hy,6,7,P.pale); eyes(20+lunge,26+lunge,hy+2,rnd,false);
-      solo(22+lunge,hy+5,4,2,"#DC2626");
-      if(ATK&&f>=3){ solo(34,hy+2,6,2,"#FFF7CC"); solo(36,hy,2,6,"#FFD24A"); }
-      break; }
-    case "avian":{
-      const fly=AIR||RUN, by=gY-16+bob*2-(fly?2:0)+lunge;
-      ANCH={hx:15+lunge,hy:by-7+bob,bx:19+lunge,by:by,bw:5,bh:9};
-      sym(19+lunge,by,5,9,P.main); solo(22+lunge,by+2,4,5,P.belly);
-      const wy=by+(fly?(ph?-6:-1):(ph?-3:1));
-      sym(10+lunge,wy,9,4,P.pale);
-      sym(15+lunge,by-7+bob,7,7,P.pale); eyes(17+lunge,29+lunge,by-5+bob,rnd,false);
-      solo(22+lunge,by-3+bob,4,2,"#F59E0B");
-      if(!fly){ sym(20,gY-4,3,4,"#F59E0B"); }
-      if(ATK&&f>=3){ solo(33,by+1,7,2,"#FFF7CC"); solo(35,by-1,2,6,"#FFD24A"); }
-      break; }
-    case "aquatic":{
-      const by=gY-18+bob*2-(AIR?3:0);
-      ANCH={hx:19,hy:by-3,bx:15,by:by,bw:9,bh:11};
-      sym(15,by,9,11,P.main); solo(20,by+3,4,5,P.belly);
-      const ty=by+((f%(REST?4:2))?(REST?0:1):-1)+(ATK&&f>=3?3:0);
-      sym(8,ty,7,7,P.pale); sym(24,by+4,3,4,P.deep); solo(19,by-3,3,3,P.pale);
-      eyes(18,28,by+3,rnd,false);
-      if(ATK&&f>=3) slash();
-      break; }
-    case "insectoid":{
-      const by=gY-20+bob;
-      ANCH={hx:20+lunge,hy:by,bx:19+lunge,by:by+7,bw:5,bh:8};
-      sym(20+lunge,by,4,6,P.deep); sym(19+lunge,by+7,5,8,P.main);
-      eyes(21+lunge,25+lunge,by+1,rnd,false);
-      const ly=by+15,lift=(AIR||RUN)?(ph?1:-1):0;
-      for(let i=0;i<3;i++){ sym(16+i*2,ly-i*2-lift*(i-1),2,2+(ph&&!REST?1:0),P.deep); }
-      if(RUN||AIR){ sym(27,ly-1,3,3,P.deep); }
-      sym(21+lunge,by-4,1,4,P.deep); sym(26+lunge,by-4,1,4,P.deep);
-      if(ATK&&f>=3) slash();
-      break; }
-    case "amorphous":{
-      const sq=act==="jump"?Math.max(bob,-7):0, r=9+br-(act==="jump"?1:0)-(ATK&&f>=3?1:0);
-      const yy=gY-r*2-2+bob;
-      ANCH={bx:24-r,by:yy,bw:r*2,bh:r*2,hx:20,hy:yy+3};
-      sym(24-r,gY-r*2-2+bob,r,r*2,P.main);
-      solo(22,yy+5+(sq?-2:0),4,3,P.belly);
-      eyes(20,26,yy+6+(sq?-2:0),rnd,true);
-      solo(21,gY-4+br+(REST?0:bob),6,2,P.deep);
-      if(ATK&&f>=3){ sym(24-r-4,gY-r*2,4,r,"hsl(0,80%,60%)"); }
-      break; }
-    case "floating":{
-      const by=10+bob*2+(act==="run"?-2:0);
-      ANCH={hx:15,hy:by,bx:15,by:by+4,bw:9,bh:12};
-      sym(15,by,9,12,P.pale); solo(21,by+4,6,6,P.main);
-      eyes(18,27,by+4,rnd,true);
-      for(let i=0;i<4;i++){
-        const tx=16+i*4,tl=6+((i+f)%(REST?4:2)?2:0)+(act==="jump"?2:0);
-        solo(tx,by+12,2,tl,P.main);
+    }
+    const hx2=Math.round(cx2-rx*0.45), hy2=Math.round(bottom-ry*0.8);
+    px(hx2,hy2,"rgba(255,255,255,.7)"); px(hx2+1,hy2,"rgba(255,255,255,.7)");
+    const ey=Math.round(bottom-ry*0.45), exl=Math.round(cx2-rx*0.38), exr=Math.round(cx2+rx*0.30);
+    solo(exl,ey,2,3,P.pupil); solo(exr,ey,2,3,P.pupil);
+    px(exl,ey,"#FFFFFF"); px(exr,ey,"#FFFFFF");
+    ANCH={body:[cx2,bottom-ry],face:1};
+  }
+  /* ===== floating：裙擺行進波幽靈 ===== */
+  else if(fam==="floating"){
+    const cy2=15+2.2*Math.sin(a)+(act==="run"?-2:0);
+    const CX2=24, skirtY=cy2+13;
+    C.fillStyle=P.pale; C.beginPath();
+    C.moveTo(CX2-11,cy2);
+    C.arc(CX2,cy2,11,Math.PI,0); /* 半圓頂 */
+    for(let x=CX2+11;x>=CX2-11;x--){
+      C.lineTo(x,skirtY+3*Math.sin(x*0.72-a));
+    }
+    C.closePath(); C.fill();
+    /* 面孔 */
+    const blink=Math.sin(a*2)>0.92;
+    const eh=blink?1:2;
+    disc(CX2-5,cy2-4,1,P.pupil); disc(CX2+5,cy2-4,1,P.pupil);
+    if(!blink){ solo(CX2-5,cy2-5,2,eh,P.pupil); solo(CX2+4,cy2-5,2,eh,P.pupil); }
+    if(Math.sin(a)>0.3){ disc(CX2+1,cy2+3,2,P.pupil); } else { ln(CX2,cy2+3,CX2+3,cy2+3,1,P.pupil); }
+    /* 拖尾飄帶 */
+    for(const k of [[-6,7,1],[0,9,1.3],[6,7,0.8]]){
+      for(let tt=0;tt<k[1];tt++){
+        const wob=Math.sin(a*k[2]+tt*0.9+k[0]);
+        px(CX2+k[0]+wob*1.6,skirtY+1+tt,"rgba(196,204,236,0.55)");
       }
-      if(ATK&&f>=3){ solo(31,by+2,8,2,"#FFF7CC"); solo(33,by,2,8,"#FFD24A"); }
-      break; }
+    }
+    ANCH={hc:[CX2,cy2],face:1};
   }
   if(drawCreature._sp) drawSpeciesDeco(drawCreature._sp,f);
 }
 
 /* ============ X-Ray（八族骨架）============ */
 let curFrames=[],curIdx=0,curTimer=null,curSeedStr="",curSeedNum=null,curAct="idle",curFam="bipedal",curSp=null,pvXray=false,lastSeed=null;
-const ACT_MS={idle:300,walk:320,run:150,jump:115,attack:170,rest:430};
+const ACT_MS={idle:110,walk:80,run:60,jump:70,attack:90,rest:160};
 const ACT_N ={idle:4};
 function minN(act,base){ return act==="jump"?Math.max(base,8):act==="run"?Math.max(base,6):act==="walk"?Math.max(base,4):act==="attack"?6:ACT_N[act]||base; }
 const view=document.getElementById("dexView"), vctx=view.getContext("2d");
+/* X-Ray：重跑一次繪製收集骨架錨點，畫骨線＋關節 */
 function drawXray(){
-  const N=curFrames.length||1,f=curIdx%N,t=f/N,ph=f%2;
-  let bob=0;
-  if(curAct==="idle") bob=[0,-1,-1,0][f%4];
-  else if(curAct==="walk") bob=f<N/2?-1:0;
-  else if(curAct==="run") bob=-Math.round(Math.abs(Math.sin(t*Math.PI*2))*3);
-  else if(curAct==="jump") bob=-Math.round(Math.sin(Math.PI*t)*7);
-  else if(curAct==="attack") bob=(f>=3&&f<=4)?-1:0;
-  else bob=(f%4<1)?-1:0;
-  const RUN=curAct==="run",REST=curAct==="rest",AIR=curAct==="jump"&&bob<=-3,ATK=curAct==="attack";
-  const sw=REST?0:(RUN?3:2)*(ph?-1:1), lg=ATK?[0,0,0,2,2,0][f%6]:0;
+  const N=curFrames.length||1, f=curIdx%N;
+  const keepSp=drawCreature._sp;
+  drawCreature._sp=null; /* 骨架唔使物種裝飾 */
+  const keepC=C;
+  const oc=document.createElement("canvas"); oc.width=48; oc.height=48;
+  C=oc.getContext("2d");
+  drawCreature(curFam,f,N,mulberry32a(fnv1a(curSeedStr||"x")),curAct);
+  C=keepC; drawCreature._sp=keepSp;
   vctx.save();
-  vctx.globalAlpha=.5; vctx.fillStyle="#0B1120"; vctx.fillRect(0,0,48,48);
+  vctx.globalAlpha=.55; vctx.fillStyle="#0B1120"; vctx.fillRect(0,0,48,48);
   vctx.globalAlpha=1;
-  const bone=(a,b,c,d)=>{vctx.beginPath();vctx.moveTo(a,b);vctx.lineTo(c,d);vctx.stroke();};
-  const jnt=(x,y)=>{vctx.fillStyle="#22C55E";vctx.fillRect(x-1,y-1,2,2);};
-  const skul=(x,y)=>{vctx.beginPath();vctx.arc(x,y,2.5,0,7);vctx.stroke();jnt(x,y);};
-  vctx.strokeStyle="#FB923C";
-  switch(curFam){
-    case "bipedal":{ const bh=ph?12:14,by=44-bh-8+bob,hy=by-9;
-      skul(24+lg,hy+4); bone(24+lg,hy+8,24+lg,by+bh);
-      const al=AIR?5:8,ay=by+4+(AIR?-3:0),ax=lg?(ATK?2:1)*lg:0;
-      bone(24+ax,ay-2,15.5,ay+(ph?0:al-1)); bone(24+ax,ay-2,29.5,ay+(ph?al-1:0));
-      const ll=AIR?4:6,l1=(RUN||ATK)&&ph?1:0,l2=(RUN||ATK)&&!ph?1:0;
-      bone(24,by+bh,16.5,44-l1-ll*.5); bone(24,by+bh,29.5,44-l2-ll*.5);
-      if(ATK&&f>=3){ vctx.strokeStyle="#FFD24A"; bone(30,12,40,22); vctx.strokeStyle="#FB923C"; } break; }
-    case "quadruped":{ const bh=ph?9:10,by=44-bh-8+bob,sy=by+bh/2,sx=lg*.5;
-      bone(12+sx,sy,36+sx,sy); skul(10.5+sx,by-.5); skul(37.5+sx,by-.5);
-      bone(12+sx,sy,10.5+sx,by+.5); bone(36+sx,sy,37.5+sx,by+.5);
-      const q1=(RUN||ATK)&&ph?1:0,q2=(RUN||ATK)&&!ph?1:0,lq=AIR?4:6;
-      [[12.5+sx,q1],[20.5+sx,q2],[27.5+sx,q2],[35.5+sx,q1]].forEach(l=>bone(l[0],sy,l[0],44-lq-l[1]+q1*0)); break; }
-    case "serpentine":{ const amp=REST?1:RUN?3:2,stp=REST?8:RUN?4:6; let px=null,py=null;
-      for(let i=0;i<6;i++){ const wob=Math.round(Math.sin(i+f)*amp),
-        cx=Math.min(21+wob,26)+1.5,cy=Math.round(8+i*stp)+(i%2===f%2?-1:0)+bob+(stp-1)/2;
-        if(px!==null) bone(px,py,cx,cy); jnt(cx,cy); px=cx; py=cy; }
-      skul(24+lg*2,7.5+bob+(AIR?-2:0)); break; }
-    case "avian":{ const fly=AIR||RUN,by=44-16+bob*2-(fly?2:0)+lg;
-      skul(18.5+lg,by-3.5); skul(29.5+lg,by-3.5); bone(24+lg,by+1,24+lg,by+8);
-      const wy=by+(fly?(ph?-6:-1):(ph?-3:1));
-      bone(20+lg,wy+2,10+lg,wy+2); bone(28+lg,wy+2,38+lg,wy+2);
-      jnt(10+lg,wy+2); jnt(38+lg,wy+2);
-      if(!fly){ bone(21.5,by+7,21.5,44); bone(26.5,by+7,26.5,44); } break; }
-    case "aquatic":{ const by=44-18+bob*2-(AIR?3:0);
-      skul(19,by+4); skul(29,by+4); bone(24,by+1,24,by+10);
-      const ty=by+((f%(REST?4:2))?(REST?0:1):-1)+(ATK&&f>=3?3:0);
-      bone(24,by+5,11.5,ty+3.5); bone(24,by+5,36.5,ty+3.5);
-      jnt(11.5,ty+3.5); jnt(36.5,ty+3.5); break; }
-    case "insectoid":{ const by=44-20+bob,ly=by+15;
-      bone(24+lg,by,24+lg,by+15); skul(24+lg,by+3);
-      bone(21.5+lg,by,21.5+lg,by-4); bone(26.5+lg,by,26.5+lg,by-4);
-      for(let i=0;i<3;i++){ const tipy=ly-i*2+1+(RUN&&i===1?sw:0);
-        bone(22+lg,by+8+i*2,17+i*2,tipy); bone(26+lg,by+8+i*2,31-i*2,tipy);
-        jnt(17+i*2,tipy); jnt(31-i*2,tipy); } break; }
-    case "amorphous":{ const r=(ph?10:9)-(curAct==="jump"?1:0),cy=44-r+bob-1;
-      vctx.beginPath(); vctx.arc(24,cy,3+(ph?1:0),0,7); vctx.stroke(); jnt(24,cy); break; }
-    case "floating":{ const by=10+bob*2+(curAct==="run"?-2:0);
-      skul(19.5,by+4); skul(28.5,by+4); bone(24,by+2,24,by+10);
-      for(let i=0;i<4;i++){ const tl=6+((i+f)%(REST?4:2)?2:0)+(curAct==="jump"?2:0);
-        bone(17+i*4,by+12,17+i*4,by+12+tl); } break; }
+  vctx.strokeStyle="#FB923C"; vctx.lineWidth=1;
+  const A=ANCH;
+  const bone=(p,q)=>{ if(!p||!q) return; vctx.beginPath(); vctx.moveTo(p[0],p[1]); vctx.lineTo(q[0],q[1]); vctx.stroke(); };
+  const jnt=(p)=>{ if(!p) return; vctx.fillStyle="#22C55E"; vctx.fillRect(p[0]-1,p[1]-1,2,2); };
+  if(A.spine&&A.spine.length>1){ /* 鏈狀骨架：serpent/fish/quadruped 脊柱 */
+    for(let i=0;i<A.spine.length-1;i++) bone(A.spine[i],A.spine[i+1]);
+    A.spine.forEach((p,i)=>{ if(i%2===0) jnt(p); });
+    if(A.tail) bone(A.spine[A.spine.length-1],A.tail);
   }
+  if(A.hc) jnt(A.hc);
+  if(A.hip&&A.chest){ /* bipedal 主幹 */
+    bone(A.hip,A.chest); jnt(A.hip); jnt(A.chest);
+    if(A.sh){ bone(A.chest,A.sh); jnt(A.sh); }
+  }
+  if(A.body&&A.wsh){ /* avian/insectoid */
+    jnt(A.body); bone(A.wsh,[A.wsh[0],A.wsh[1]+7]); jnt(A.wsh);
+  }
+  if(A.tail&&A.spine&&A.spine.length<=2){ bone(A.spine[0],A.tail); }
   vctx.restore();
 }
 
@@ -857,7 +1018,8 @@ function generate(text,keep){
   P=makePalette(mulberry32a(seed^0x9E3779B9));
   curFam=F.key; curSp=SP;
   const name=makeName(mulberry32a(seed^0x85EBCA6B)), lore=makeLore(mulberry32a(seed^0xC2B2AE35));
-  const baseN=4+((seed>>>2)%2), N=Math.max(4,minN(curAct,baseN));
+  /* 16 帧完整步態循環（同 Python 生成器一致）；idle/rest 用 8 帧慳位 */
+  const N=(curAct==="idle"||curAct==="rest")?8:16;
   curFrames=[];
   for(let f=0;f<N;f++){
     const oc=document.createElement("canvas"); oc.width=48; oc.height=48;
