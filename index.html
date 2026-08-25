@@ -336,7 +336,7 @@
   <div class="creator">
     <div>
       <div class="inputrow">
-        <input id="seedInput" type="text" maxlength="40" placeholder="輸入文字，例如：火龍 / cyber cat…" aria-label="物種種子文字">
+        <input id="seedInput" type="text" maxlength="40" placeholder="輸入文字或 #碼，例如：火龍 / cyber cat / #a3f2c8" aria-label="物種種子文字">
         <button class="btn primary small" id="genBtn">GENERATE</button>
       </div>
       <div class="chips" aria-label="快捷範例">
@@ -350,6 +350,7 @@
       <div class="dexinfo">
         <span class="nm" id="dexName">— 等待輸入 —</span>
         <span class="tag" id="dexFam">???</span>
+        <span class="tag" id="dexSeed" title="重現碼：之後打 名字+#碼 就還原呢隻"></span>
         <span class="lore" id="dexLore"></span>
         <div class="stats">
           <b>HP</b><div class="bar"><i id="barHP"></i></div><em id="vHP">--</em>
@@ -490,6 +491,18 @@ const FAMILIES=[
   {key:"bipedal",zh:"兩足獸"},{key:"quadruped",zh:"四足獸"},{key:"serpentine",zh:"蛇形族"},
   {key:"avian",zh:"鳥形族"},{key:"aquatic",zh:"水棲族"},{key:"insectoid",zh:"蟲形族"},
   {key:"amorphous",zh:"黏體族"},{key:"floating",zh:"浮遊族"}];
+/* 關鍵字→家族：打乜字出邊族；認唔到先用 seed 揀 */
+const SPECIES_KW=[
+  [/slime|史萊姆|果凍|jelly|黏/i,"amorphous"],
+  [/ghost|鬼|靈|魂|spirit|wraith|phantom|幽/i,"floating"],
+  [/bird|鳥|雀|鷹|鴉|raven|鴿|bat|蝙蝠|owl|貓頭鷹/i,"avian"],
+  [/fish|魚|鯊|shark|鯨|whale|章魚|octopus|水母|海/i,"aquatic"],
+  [/bug|蟲|insect|蜂|bee|蝶|butterfly|蛾|moth|蜘蛛|spider|甲蟲|beetle|蟻|ant/i,"insectoid"],
+  [/dragon|龍|snake|蛇|serpent|蟒/i,"serpentine"],
+  [/cat|貓|喵|dog|狗|犬|wolf|狼|fox|狐|兔|rabbit|馬|horse|獅|lion|虎|tiger|豹|熊|bear|鹿|deer/i,"quadruped"],
+  [/human|人|knight|武士|俠|robot|機器人|機械人|bot|android|goblin|哥布林|orc|獸人/i,"bipedal"]
+];
+function speciesOf(t){ if(!t) return null; for(var i=0;i<SPECIES_KW.length;i++){ if(SPECIES_KW[i][0].test(t)) return SPECIES_KW[i][1]; } return null; }
 const PRE=["咕嚕","波波","電電","熔岩","霜霜","影影","星塵","泡泡","菇菇","雷雷","Cyber","Neo","Pixel","Glitch","Astro","Mecha"];
 const SUF=["獸","精靈","蟲","龍","史萊姆","俠","喵","犬","魚","Bot","mon","ling"];
 const PLACES=["深海溝","廢棄街機","數據垃圾崗","雲上浮島","地鐵隧道","像素森林","舊伺服器房","霓虹後巷"];
@@ -641,7 +654,7 @@ function drawCreature(fam,f,N,rnd,act){
 }
 
 /* ============ X-Ray（八族骨架）============ */
-let curFrames=[],curIdx=0,curTimer=null,curSeedStr="",curAct="idle",curFam="bipedal",pvXray=false,lastSeed=null;
+let curFrames=[],curIdx=0,curTimer=null,curSeedStr="",curSeedNum=null,curAct="idle",curFam="bipedal",pvXray=false,lastSeed=null;
 const ACT_MS={idle:300,walk:320,run:150,jump:115,attack:170,rest:430};
 const ACT_N ={idle:4};
 function minN(act,base){ return act==="jump"?Math.max(base,8):act==="run"?Math.max(base,6):act==="walk"?Math.max(base,4):act==="attack"?6:ACT_N[act]||base; }
@@ -710,13 +723,18 @@ function drawXray(){
 }
 
 /* ============ 生成主流程 ============ */
-function generate(text){
-  const seedStr=(text||"").trim()||"slime", seed=fnv1a(seedStr);
-  const F=FAMILIES[seed%FAMILIES.length];
+function generate(text,keep){
+  const seedStr=(text||"").trim()||"slime";
+  /* 契約：尾端 #xxxxxxxx＝重現碼；無碼＝每次新抽。家族跟關鍵字行先 */
+  const mc=seedStr.match(/#([0-9a-fA-F]{1,8})\s*$/);
+  const baseTxt=mc?seedStr.slice(0,mc.index).trim():seedStr;
+  const seed=mc?(parseInt(mc[1],16)>>>0):((keep&&curSeedStr===seedStr&&curSeedNum!==null)?curSeedNum:(Math.random()*4294967296)>>>0);
+  const fk=speciesOf(baseTxt)||FAMILIES[seed%FAMILIES.length].key;
+  const F=FAMILIES.find(function(x){return x.key===fk;})||FAMILIES[seed%FAMILIES.length];
   P=makePalette(mulberry32a(seed^0x9E3779B9));
   curFam=F.key;
   const name=makeName(mulberry32a(seed^0x85EBCA6B)), lore=makeLore(mulberry32a(seed^0xC2B2AE35));
-  const baseN=2+((seed>>>3)%3), N=Math.max(2,minN(curAct,baseN));
+  const baseN=4+((seed>>>2)%2), N=Math.max(4,minN(curAct,baseN));
   curFrames=[];
   for(let f=0;f<N;f++){
     const oc=document.createElement("canvas"); oc.width=48; oc.height=48;
@@ -727,10 +745,11 @@ function generate(text){
   }
   document.getElementById("dexName").textContent=name;
   document.getElementById("dexFam").textContent=F.zh;
+  document.getElementById("dexSeed").textContent="#"+seed.toString(16);
   document.getElementById("dexLore").textContent=lore;
   setBar("HP",30+(seed>>5)%70); setBar("ATK",20+(seed>>9)%80); setBar("SPD",25+(seed>>13)%75);
   document.getElementById("gfileChip").textContent=
-    seedStr.replace(/\s+/g,"-")+"_"+curAct+".png · 48×48 · f"+N+(STYLES[curStyle].id!=="neon"?" · "+STYLES[curStyle].nm.toLowerCase():"");
+    seedStr.replace(/\s+/g,"-")+"_"+curAct+".png · 48×48 · f"+N+" · #"+seed.toString(16)+(STYLES[curStyle].id!=="neon"?" · "+STYLES[curStyle].nm.toLowerCase():"");
   if(curTimer) clearInterval(curTimer);
   curIdx=0;
   if(!curFrames.length){ lastSeed=seedStr; curSeedStr=seedStr; return; }
@@ -779,7 +798,7 @@ document.querySelectorAll(".pvctl [data-act]").forEach(b=>{
     document.querySelectorAll(".pvctl [data-act]").forEach(x=>{
       x.classList.toggle("on",x===b); x.setAttribute("aria-pressed",x===b?"true":"false");
     });
-    generate(lastSeed||"火龍");
+    generate(lastSeed||"火龍",true);
   };
 });
 const pvXrayBtn=document.getElementById("pvXrayBtn");
@@ -794,6 +813,7 @@ pvXrayBtn.onclick=()=>{
 
 /* ============ 輸入接線 ============ */
 document.getElementById("genBtn").onclick=()=>generate(document.getElementById("seedInput").value);
+document.getElementById("dexSeed").onclick=function(){ if(navigator.clipboard) navigator.clipboard.writeText(this.textContent); };
 document.getElementById("seedInput").addEventListener("keydown",e=>{ if(e.key==="Enter") generate(e.target.value); });
 document.querySelectorAll("#creator .chip").forEach(ch=>ch.onclick=()=>{
   document.getElementById("seedInput").value=ch.textContent; generate(ch.textContent);
@@ -827,7 +847,7 @@ function buildStyles(){
     card.onclick=()=>{
       curStyle=i;
       document.querySelectorAll(".stylecard").forEach((c,k)=>c.classList.toggle("on",k===i));
-      generate(lastSeed||demo);
+      generate(lastSeed||demo,true);
       renderLibrary();
     };
     grid.appendChild(card);
